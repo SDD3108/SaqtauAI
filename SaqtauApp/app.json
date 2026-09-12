@@ -37,7 +37,8 @@
           "image": "./assets/images/SaqtauAI Logo.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

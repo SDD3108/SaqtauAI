@@ -19,5 +19,5 @@
     "src/components/themed-text.jsx",
     "src/app/index.hsx",
     "nativewind-env.d.ts"
-, "src/app/index.jsx"  ]
+, "src/app/index.jsx", "src/features/check-in/check-in.api.js", "src/features/auth/hooks/useAuth.js", "src/features/auth/components/AuthInput.jsx", "src/features/auth/components/SignInForm.jsx", "src/features/ai/ai.api.js", "src/app/(app)/_layout.jsx", "src/features/onboarding/hooks/useOnboarding.js", "src/features/onboarding/onboarding.store.js", "src/features/notifications/notifications.api.js", "src/features/history/history.api.js", "src/features/family/family.api.js", "src/features/dashboard/dashboard.api.js"  ]
 }
