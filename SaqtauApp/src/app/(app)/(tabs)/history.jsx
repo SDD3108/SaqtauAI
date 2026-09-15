@@ -1,13 +1,5 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import HistoryScreen from '@/src/features/history/components/HistoryScreen';
 
-const history = () => {
-    return (
-        <SafeAreaView>
-            <Text>history</Text>
-        </SafeAreaView>
-    );
-};
-
-export default history;
+export default function HistoryRoute() {
+  return <HistoryScreen />;
+}

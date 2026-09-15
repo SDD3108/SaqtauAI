@@ -3,18 +3,18 @@ import { create } from 'zustand';
 import {
   createGuestSession,
   getCurrentAccount,
-} from '@/features/auth/auth.api';
-import { ApiError, setApiToken } from '@/services/api/client';
+} from '@/src/features/auth/auth.api';
+import { ApiError, setApiToken } from '@/src/services/api/client';
 import {
   removeSecureItem,
   getSecureItem,
   setSecureItem,
-} from '@/services/storage/secure-storage';
-import { getJSON, removeStorageItem, setJSON } from '@/services/storage/storage';
+} from '@/src/services/storage/secure-storage';
+import { getJSON, removeStorageItem, setJSON } from '@/src/services/storage/storage';
 import {
   SECURE_STORAGE_KEYS,
   STORAGE_KEYS,
-} from '@/services/storage/keys';
+} from '@/src/services/storage/keys';
 
 async function persistSession(token, sessionType, account) {
   await Promise.all([

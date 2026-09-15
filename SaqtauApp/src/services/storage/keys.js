@@ -5,6 +5,8 @@ export const STORAGE_KEYS = {
   PROFILE: 'saqtau.profile',
   ACCOUNT_SNAPSHOT: 'saqtau.account.snapshot',
   LOCAL_CHECKINS: 'saqtau.guest.checkins',
+  PENDING_MEASUREMENT_ID: 'saqtau.checkin.pendingMeasurementId',
+  LAST_MEASUREMENT_ID: 'saqtau.checkin.lastMeasurementId',
 };
 
 export const SECURE_STORAGE_KEYS = {

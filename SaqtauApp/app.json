@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/SaqtauAI Logo.png",
     "scheme": "saqtauapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundler": "metro",
@@ -38,7 +38,31 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "18.0"
+          }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SaqtauAI to use your camera for 60-second wellness check-ins.",
+          "microphonePermission": "Allow SaqtauAI to use your microphone for voice features.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Allow SaqtauAI to use motion data to help keep your check-in stable."
+        }
+      ],
+      "expo-secure-store",
+      "expo-build-properties",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

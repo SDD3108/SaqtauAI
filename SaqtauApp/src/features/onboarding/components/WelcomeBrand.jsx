@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useOnboardingStore } from '@/features/onboarding/onboarding.store';
+import Logo from '@/assets/images/Logo.svg';
+import { useOnboardingStore } from '@/src/features/onboarding/onboarding.store';
 
 export default function WelcomeScreen() {
   const completeWelcome = useOnboardingStore((state) => state.completeWelcome);
@@ -12,30 +14,88 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#ECECEC] px-8 pb-12 pt-24">
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-4xl font-bold text-[#181027]">SaqtauAI</Text>
-        <Text className="mt-14 text-center text-[32px] font-extrabold leading-10 text-[#181027]">
-          Know your body, gently.
-        </Text>
-        <Text className="mt-5 text-center text-lg leading-7 text-[#807B89]">
-          A calm 60-second check-in with Saqtau AI.
-        </Text>
+    <SafeAreaView
+      className="flex-1 bg-[#ECECEC]"
+      edges={['top', 'bottom']}
+    >
+      <View className="flex-1 px-6">
+        <View className="flex-1 items-center justify-center">
+          <Logo width={150} height={48} />
+
+          <Text className="font-inter-extrabold mt-24 max-w-[320px] text-center text-[34px] leading-[40px] tracking-[-1.3px] text-[#181027]">
+            Know your body, gently.
+          </Text>
+
+          <Text className="font-inter-medium mt-8 max-w-[300px] text-center text-[18px] leading-6 text-[#807B89]">
+            A calm 60-second check-in with Saqtau AI.
+          </Text>
+        </View>
+
+        <View className="pb-4">
+          <Pressable
+            accessibilityRole="button"
+            className="h-14 items-center justify-center rounded-2xl bg-[#181027] active:opacity-90"
+            onPress={handleStartCheckIn}
+          >
+            <Text className="font-inter-medium text-[16px] text-[#ECECEC]">
+              Start check-in
+            </Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            className="mt-3 h-12 items-center justify-center"
+            onPress={() => router.push('/(auth)/sign-in')}
+          >
+            <Text className="font-inter-medium text-[16px] text-[#181027]">
+              Sign in
+            </Text>
+          </Pressable>
+        </View>
       </View>
-
-      <Pressable
-        className="items-center rounded-xl bg-[#181027] py-5"
-        onPress={handleStartCheckIn}
-      >
-        <Text className="text-lg font-semibold text-[#ECECEC]">Start check-in</Text>
-      </Pressable>
-
-      <Pressable className="mt-7 items-center" onPress={() => router.push('/(auth)/sign-in')}>
-        <Text className="text-lg font-medium text-[#181027]">Sign in</Text>
-      </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }
+
+
+// import { router } from 'expo-router';
+// import { Pressable, Text, View } from 'react-native';
+
+// import { useOnboardingStore } from '@/src/features/onboarding/onboarding.store';
+
+// export default function WelcomeScreen() {
+//   const completeWelcome = useOnboardingStore((state) => state.completeWelcome);
+
+//   const handleStartCheckIn = async () => {
+//     await completeWelcome();
+//     router.push('/(check-in)');
+//   };
+
+//   return (
+//     <View className="flex-1 bg-[#ECECEC] px-8 pb-12 pt-24">
+//       <View className="flex-1 items-center justify-center">
+//         <Text className="text-4xl font-bold text-[#181027]">SaqtauAI</Text>
+//         <Text className="mt-14 text-center text-[32px] font-extrabold leading-10 text-[#181027]">
+//           Know your body, gently.
+//         </Text>
+//         <Text className="mt-5 text-center text-lg leading-7 text-[#807B89]">
+//           A calm 60-second check-in with Saqtau AI.
+//         </Text>
+//       </View>
+
+//       <Pressable
+//         className="items-center rounded-xl bg-[#181027] py-5"
+//         onPress={handleStartCheckIn}
+//       >
+//         <Text className="text-lg font-semibold text-[#ECECEC]">Start check-in</Text>
+//       </Pressable>
+
+//       <Pressable className="mt-7 items-center" onPress={() => router.push('/(auth)/sign-in')}>
+//         <Text className="text-lg font-medium text-[#181027]">Sign in</Text>
+//       </Pressable>
+//     </View>
+//   );
+// }
 
 
 

@@ -1,4 +1,4 @@
-import { apiRequest } from '@/services/api/client';
+import { apiRequest } from '@/src/services/api/client';
 
 export function createGuestSession() {
   return apiRequest('/auth/guest/', {

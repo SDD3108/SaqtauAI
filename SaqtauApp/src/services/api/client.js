@@ -1,4 +1,4 @@
-import { API_TIMEOUT, API_URL } from '@/constants/config';
+import { API_TIMEOUT, API_URL } from '@/src/constants/config';
 
 let accessToken = null;
 

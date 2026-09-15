@@ -6,13 +6,11 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        main: ['"Inter"', 'sans-serif'],
-        second: ['"Linotte-SemiBold"', 'sans-serif'],
-        third: ['"Cairo"', 'sans-serif'],
-        font3: ['"Linotte-Bold"', 'sans-serif'],
-        font4: ['"Linotte-Regular"', 'sans-serif'],
-        font5: ['"Linotte-Heavy"', 'sans-serif'],
-        font6: ['"Helvetica"', 'sans-serif'],
+        'inter': ['Inter_400Regular'],
+        'inter-medium': ['Inter_500Medium'],
+        'inter-semibold': ['Inter_600SemiBold'],
+        'inter-bold': ['Inter_700Bold'],
+        'inter-extrabold': ['Inter_800ExtraBold'],
       },
     },
   },
