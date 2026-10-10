@@ -1,13 +1,9 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
-const ContentSafety = () => {
-    return (
-        <SafeAreaView>
-            <Text>ContentSafety</Text>
-        </SafeAreaView>
-    );
-};
+import ContentSafetyScreen from '@/src/features/family/components/ContentSafetyScreen';
 
-export default ContentSafety;
+export default function Route() {
+  const { accountId } = useLocalSearchParams();
+  const id = Array.isArray(accountId) ? accountId[0] : accountId;
+  return <ContentSafetyScreen accountId={id} />;
+}

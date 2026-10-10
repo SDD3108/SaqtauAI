@@ -1,17 +1,25 @@
 {
   "expo": {
     "name": "Saqtau AI",
-    "slug": "Saqtau AI",
+    "slug": "SaqtauAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/SaqtauAI Logo.png",
-    "scheme": "saqtauapp",
+    "scheme": "saqtau",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundler": "metro",
+      "appleTeamId": "5QZMMBZ7R7",
       "icon": "./assets/images/SaqtauAI Logo.png",
-      "bundleIdentifier": "com.sd3108.Saqtau-AI"
+      "bundleIdentifier": "com.sd3108.Saqtau-AI",
+      "associatedDomains": [
+        "applinks:links.saqtau.ai",
+        "applinks:links.saqtau.ai"
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "bundler": "metro",
@@ -21,7 +29,15 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/SaqtauAI Logo.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "package": "com.sd3108.SaqtauAI"
     },
     "web": {
       "output": "static",
@@ -60,13 +76,55 @@
           "motionPermission": "Allow SaqtauAI to use motion data to help keep your check-in stable."
         }
       ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Saqtau AI to record voice messages for transcription."
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "ru", "kk"],
+            "android": ["en", "ru", "kk"]
+          }
+        }
+      ],
+      "expo-notifications",
       "expo-secure-store",
       "expo-build-properties",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/with-saqtau-screen-time"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "82ebc2ab-fc5a-4575-a6f6-5063ffa8cc33",
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "SaqtauScreenTimeMonitor",
+                  "bundleIdentifier": "com.sd3108.Saqtau-AI.ScreenTimeMonitor",
+                  "entitlements": {
+                    "com.apple.developer.family-controls": true,
+                    "com.apple.security.application-groups": [
+                      "group.com.sd3108.Saqtau-AI.screentime"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "owner": "sd3108"
   }
 }

@@ -5,8 +5,12 @@ export const STORAGE_KEYS = {
   PROFILE: 'saqtau.profile',
   ACCOUNT_SNAPSHOT: 'saqtau.account.snapshot',
   LOCAL_CHECKINS: 'saqtau.guest.checkins',
+  ACCOUNT_TRANSFERRED_CHECKINS_PREFIX: 'saqtau.account.transferredCheckins',
   PENDING_MEASUREMENT_ID: 'saqtau.checkin.pendingMeasurementId',
   LAST_MEASUREMENT_ID: 'saqtau.checkin.lastMeasurementId',
+  NOTIFICATION_PREFERENCES: 'saqtau.notifications.preferences',
+  PRIVACY_PREFERENCES: 'saqtau.privacy.preferences',
+  LANGUAGE: 'saqtau.localization.language',
 };
 
 export const SECURE_STORAGE_KEYS = {

@@ -2,12 +2,15 @@ import { HeartPulse } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 
 import HeartSignalGraphic from '@/src/features/dashboard/components/HeartSignalGraphic';
+import useI18n from '@/src/features/localization/hooks/useI18n';
 
 export default function WellnessScoreCard({
   score,
   statusLabel,
   message,
 }) {
+  const { t } = useI18n();
+
   return (
     <View className="rounded-[15px] border border-[#B7B2BD] px-5 pb-5 pt-4">
       <View className="self-start flex-row items-center rounded-[14px] bg-[#DDDCDE] px-3 py-2">
@@ -24,7 +27,7 @@ export default function WellnessScoreCard({
       <View className="mt-5 flex-row items-center justify-between">
         <View className="flex-1 pr-2">
           <Text className="font-inter-medium text-[13px] text-[#807B89]">
-            Your wellness score
+            {t('dashboard.score')}
           </Text>
 
           <View className="mt-1 flex-row items-end">

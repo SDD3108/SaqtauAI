@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
+
+import useI18n from '@/src/features/localization/hooks/useI18n';
 import {
   Circle,
   Line,
@@ -52,6 +54,7 @@ function buildPath(points, width) {
 }
 
 export default function TrendChart({ points }) {
+  const { t } = useI18n();
   const [width, setWidth] = useState(0);
 
   const { path, coordinates } = useMemo(
@@ -103,7 +106,7 @@ export default function TrendChart({ points }) {
       ) : (
         <View className="h-[142px] items-center justify-center px-5">
           <Text className="text-center font-inter-medium text-[13px] leading-[19px] text-[#8E879B]">
-            More completed check-ins will build your trend here.
+            {t('history.trendEmpty')}
           </Text>
         </View>
       )}

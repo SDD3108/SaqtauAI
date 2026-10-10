@@ -1,13 +1,5 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import ProfileSettingsScreen from '@/src/features/settings/components/ProfileSettingsScreen';
 
-const profile = () => {
-    return (
-        <SafeAreaView>
-            <Text>profile</Text>
-        </SafeAreaView>
-    );
-};
-
-export default profile;
+export default function ProfileSettingsRoute() {
+  return <ProfileSettingsScreen />;
+}

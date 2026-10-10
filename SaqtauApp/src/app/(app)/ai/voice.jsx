@@ -1,13 +1,3 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import VoiceRecordingScreen from '@/src/features/ai/components/VoiceRecordingScreen';
 
-const voice = () => {
-    return (
-        <SafeAreaView>
-            <Text>voice</Text>
-        </SafeAreaView>
-    );
-};
-
-export default voice;
+export default VoiceRecordingScreen;

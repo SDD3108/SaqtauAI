@@ -78,12 +78,17 @@ export async function apiRequest(
 
     return data;
   } catch (error) {
+    console.log('[API REQUEST]', {
+      url: `${API_URL}${path}`,
+      auth,
+      hasAccessToken: Boolean(accessToken),
+    });
     if (error instanceof ApiError) {
       throw error;
     }
 
     if (error?.name === 'AbortError') {
-      throw new ApiError('Request timed out');
+      throw new ApiError(`Request timed out: ${method} ${API_URL}${path}`);
     }
 
     throw new ApiError('Network request failed');

@@ -1,18 +1,13 @@
+import { getCurrentLocale, tNow } from '@/src/features/localization/localization.store';
+
 function toNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
 
 export function measurementDate(measurement) {
-  const value =
-    measurement?.processed_at ||
-    measurement?.created_at ||
-    null;
-
-  if (!value) {
-    return null;
-  }
-
+  const value = measurement?.processed_at || measurement?.created_at || null;
+  if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
@@ -26,9 +21,7 @@ export function sortMeasurementsNewestFirst(items = []) {
 }
 
 export function completedMeasurements(items = []) {
-  return sortMeasurementsNewestFirst(
-    items.filter((item) => item?.status === 'completed'),
-  );
+  return sortMeasurementsNewestFirst(items.filter((item) => item?.status === 'completed'));
 }
 
 export function getLatestCompletedMeasurement(items = []) {
@@ -45,81 +38,44 @@ export function getWellnessScore(summary, latest) {
 
   for (const value of candidates) {
     const number = toNumber(value);
-
-    if (number !== null) {
-      return Math.max(0, Math.min(100, Math.round(number)));
-    }
+    if (number !== null) return Math.max(0, Math.min(100, Math.round(number)));
   }
-
   return null;
 }
 
 export function getDashboardStatus(summary, latest) {
-  const raw = String(
-    summary?.status || latest?.stress_level || '',
-  )
-    .trim()
-    .toLowerCase();
+  const raw = String(summary?.status || latest?.stress_level || '').trim().toLowerCase();
 
-  if (
-    raw.includes('steady') ||
-    raw.includes('balanced') ||
-    raw.includes('good') ||
-    raw === 'low'
-  ) {
-    return 'Steady today';
+  if (raw.includes('steady') || raw.includes('balanced') || raw.includes('good') || raw === 'low') {
+    return tNow('dashboard.statusSteady');
   }
-
-  if (raw === 'medium' || raw.includes('moderate')) {
-    return 'Mixed today';
-  }
-
-  if (raw === 'high') {
-    return 'Higher stress';
-  }
-
-  return latest ? 'Check-in complete' : 'Ready when you are';
+  if (raw === 'medium' || raw.includes('moderate')) return tNow('dashboard.statusMixed');
+  if (raw === 'high') return tNow('dashboard.statusHigh');
+  return latest ? tNow('dashboard.statusComplete') : tNow('dashboard.statusReady');
 }
 
 export function getDashboardMessage(summary, latest) {
-  if (summary?.message) {
-    return String(summary.message);
-  }
-
-  if (!latest) {
-    return 'Complete a check-in to see your latest wellness snapshot.';
-  }
-
-  if (latest.stress_level === 'high') {
-    return 'Your latest signals show a higher stress reading.';
-  }
-
-  return 'Your latest signals look balanced.\nKeep up the great work.';
+  if (summary?.message) return String(summary.message);
+  if (!latest) return tNow('dashboard.messageEmpty');
+  if (latest.stress_level === 'high') return tNow('dashboard.messageHigh');
+  return tNow('dashboard.messageBalanced');
 }
 
 export function formatLastCheckIn(measurement) {
   const date = measurementDate(measurement);
-
-  if (!date) {
-    return 'No check-in yet';
-  }
+  if (!date) return tNow('dashboard.noCheckIn');
 
   const now = new Date();
   const sameDay =
     now.getFullYear() === date.getFullYear() &&
     now.getMonth() === date.getMonth() &&
     now.getDate() === date.getDate();
+  const locale = getCurrentLocale();
 
-  const time = date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  const time = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+  if (sameDay) return `${tNow('common.today')}, ${time}`;
 
-  if (sameDay) {
-    return `Today, ${time}`;
-  }
-
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -129,15 +85,12 @@ export function formatLastCheckIn(measurement) {
 
 export function formatCheckInDuration(measurement) {
   const seconds = toNumber(measurement?.duration_seconds);
-
   if (seconds === null || seconds <= 0) {
-    return measurement ? '1 min check-in' : '—';
+    return measurement ? tNow('dashboard.oneMinuteCheckIn') : '—';
   }
 
-  if (seconds < 90) {
-    return `${Math.max(1, Math.round(seconds / 60))} min check-in`;
-  }
-
-  const minutes = Math.round(seconds / 60);
-  return `${minutes} min check-in`;
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  return minutes === 1
+    ? tNow('dashboard.oneMinuteCheckIn')
+    : tNow('dashboard.minutesCheckIn', { count: minutes });
 }

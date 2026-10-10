@@ -12,7 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ProfileField from '@/src/components/ui/ProfileField';
-import UnitSegmentedControl from '@/src/components/ui/SegmentedControl';
+import useI18n from '@/src/features/localization/hooks/useI18n';
+import UnitSegmentedControl from '@/src/components/ui/UnitSegmentedControl';
 import {
   PROFILE_LIMITS,
   formatDate,
@@ -32,6 +33,7 @@ function getDefaultDate() {
 }
 
 export default function BeforeStartForm({ profile, onContinue }) {
+  const { t } = useI18n();
   const [units, setUnits] = useState(profile.units || 'metric');
   const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth || '');
   const [height, setHeight] = useState(
@@ -70,26 +72,22 @@ export default function BeforeStartForm({ profile, onContinue }) {
     return {
       dateOfBirth:
         !dobDate || dobDate > today
-          ? 'Choose a valid date of birth'
+          ? t('checkin.validDob')
           : null,
       height:
         !Number.isFinite(heightNumber) ||
         heightNumber < limits.height.min ||
         heightNumber > limits.height.max
-          ? `Enter ${limits.height.min}–${limits.height.max} ${
-              units === 'metric' ? 'cm' : 'in'
-            }`
+          ? t('auth.heightRange', { min: limits.height.min, max: limits.height.max, unit: units === 'metric' ? 'cm' : 'in' })
           : null,
       weight:
         !Number.isFinite(weightNumber) ||
         weightNumber < limits.weight.min ||
         weightNumber > limits.weight.max
-          ? `Enter ${limits.weight.min}–${limits.weight.max} ${
-              units === 'metric' ? 'kg' : 'lb'
-            }`
+          ? t('auth.weightRange', { min: limits.weight.min, max: limits.weight.max, unit: units === 'metric' ? 'kg' : 'lb' })
           : null,
     };
-  }, [dateOfBirth, height, units, weight]);
+  }, [dateOfBirth, height, t, units, weight]);
 
   const isValid = !validation.dateOfBirth && !validation.height && !validation.weight;
 
@@ -146,11 +144,11 @@ export default function BeforeStartForm({ profile, onContinue }) {
           <View className="flex-1 px-6 pb-5 pt-8">
             <View>
               <Text className="font-inter-extrabold text-[34px] leading-[40px] tracking-[-1.1px] text-[#181027]">
-                Before we start
+                {t('checkin.beforeTitle')}
               </Text>
 
               <Text className="font-inter mt-3 max-w-[340px] text-[17px] leading-6 text-[#807B89]">
-                A few details help SaqtauAI make your check-in more personal.
+                {t('checkin.beforeBody')}
               </Text>
             </View>
 
@@ -159,7 +157,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
 
               <View className="mt-5">
                 <Text className="font-inter-medium mb-2 text-[15px] text-[#5F5967]">
-                  Date of birth
+                  {t('profile.dob')}
                 </Text>
 
                 <Pressable
@@ -176,7 +174,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
                       dateOfBirth ? 'text-[#181027]' : 'text-[#A19CA6]'
                     }`}
                   >
-                    {dateOfBirth ? formatDate(dateOfBirth) : 'Select date'}
+                    {dateOfBirth ? formatDate(dateOfBirth) : t('checkin.selectDate')}
                   </Text>
                 </Pressable>
 
@@ -188,7 +186,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
               </View>
 
               <ProfileField
-                label="Height"
+                label={t('profile.height')}
                 value={height}
                 onChangeText={setHeight}
                 unit={units === 'metric' ? 'cm' : 'in'}
@@ -197,7 +195,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
               />
 
               <ProfileField
-                label="Weight"
+                label={t('profile.weight')}
                 value={weight}
                 onChangeText={setWeight}
                 unit={units === 'metric' ? 'kg' : 'lb'}
@@ -216,7 +214,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
               onPress={handleContinue}
             >
               <Text className="font-inter-medium text-[16px] text-[#ECECEC]">
-                Continue
+                {t('checkin.continue')}
               </Text>
             </Pressable>
           </View>
@@ -242,17 +240,17 @@ export default function BeforeStartForm({ profile, onContinue }) {
                 onPress={() => setDatePickerOpen(false)}
               >
                 <Text className="font-inter-medium text-[16px] text-[#807B89]">
-                  Cancel
+                  {t('common.cancel')}
                 </Text>
               </Pressable>
 
               <Text className="font-inter-semibold text-[17px] text-[#181027]">
-                Date of birth
+                {t('profile.dob')}
               </Text>
 
               <Pressable className="h-11 justify-center px-2" onPress={saveDate}>
                 <Text className="font-inter-semibold text-[16px] text-[#181027]">
-                  Done
+                  {t('common.done')}
                 </Text>
               </Pressable>
             </View>

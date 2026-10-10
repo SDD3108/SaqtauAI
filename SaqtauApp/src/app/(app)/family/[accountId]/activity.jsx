@@ -1,13 +1,9 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
-const activity = () => {
-    return (
-        <SafeAreaView>
-            <Text>activity</Text>
-        </SafeAreaView>
-    );
-};
+import FamilyActivityScreen from '@/src/features/family/components/FamilyActivityScreen';
 
-export default activity;
+export default function Route() {
+  const { accountId } = useLocalSearchParams();
+  const id = Array.isArray(accountId) ? accountId[0] : accountId;
+  return <FamilyActivityScreen accountId={id} />;
+}

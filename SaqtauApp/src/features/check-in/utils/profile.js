@@ -1,3 +1,5 @@
+import { getCurrentLocale } from '@/src/features/localization/localization.store';
+
 export const PROFILE_LIMITS = {
   metric: {
     height: { min: 50, max: 250 },
@@ -8,7 +10,7 @@ export const PROFILE_LIMITS = {
     weight: { min: 20, max: 770 },
   },
 };
-
+``
 export function roundToOne(value) {
   return Math.round(value * 10) / 10;
 }
@@ -84,7 +86,7 @@ export function formatDate(value) {
     return '';
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getCurrentLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

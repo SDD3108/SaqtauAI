@@ -1,13 +1,9 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
-const privacy = () => {
-    return (
-        <SafeAreaView>
-            <Text>privacy</Text>
-        </SafeAreaView>
-    );
-};
+import FamilyPrivacyScreen from '@/src/features/family/components/FamilyPrivacyScreen';
 
-export default privacy;
+export default function Route() {
+  const { accountId } = useLocalSearchParams();
+  const id = Array.isArray(accountId) ? accountId[0] : accountId;
+  return <FamilyPrivacyScreen accountId={id} />;
+}

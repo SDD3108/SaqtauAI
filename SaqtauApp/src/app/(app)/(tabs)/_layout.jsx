@@ -11,6 +11,7 @@ import HomeIcon from '@/assets/images/home.svg';
 import HomeActiveIcon from '@/assets/images/home_active.svg';
 import SettingsIcon from '@/assets/images/settings.svg';
 import { useAuthStore } from '@/src/features/auth/auth.store';
+import useI18n from '@/src/features/localization/hooks/useI18n';
 
 const ICON_SIZE = 24;
 
@@ -22,6 +23,7 @@ function TabIcon({ focused, Icon, ActiveIcon }) {
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const isGuest = useAuthStore((state) => state.isGuest);
+  const { t } = useI18n();
 
   const requireAccount = {
     tabPress: (event) => {
@@ -58,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} Icon={HomeIcon} ActiveIcon={HomeActiveIcon} />
           ),
@@ -68,7 +70,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: 'History',
+          title: t('tabs.history'),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
@@ -83,7 +85,7 @@ export default function TabsLayout() {
         name="family"
         listeners={requireAccount}
         options={{
-          title: 'Family',
+          title: t('tabs.family'),
           tabBarIcon: ({ focused }) => (
             <TabIcon
               focused={focused}
@@ -98,7 +100,7 @@ export default function TabsLayout() {
         name="ai"
         listeners={requireAccount}
         options={{
-          title: 'AI',
+          title: t('tabs.ai'),
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} Icon={AiIcon} ActiveIcon={AiActiveIcon} />
           ),
@@ -108,7 +110,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: t('tabs.settings'),
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} Icon={SettingsIcon} ActiveIcon={SettingsIcon} />
           ),

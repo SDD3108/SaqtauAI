@@ -1,13 +1,5 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import NotificationsScreen from '@/src/features/notifications/components/NotificationsScreen';
 
-const index = () => {
-    return (
-        <SafeAreaView>
-            <Text>index</Text>
-        </SafeAreaView>
-    );
-};
-
-export default index;
+export default function NotificationsRoute() {
+  return <NotificationsScreen />;
+}

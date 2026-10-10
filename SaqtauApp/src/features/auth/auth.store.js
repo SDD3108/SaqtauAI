@@ -3,14 +3,28 @@ import { create } from 'zustand';
 import {
   createGuestSession,
   getCurrentAccount,
+  loginWithEmail,
+  registerWithEmail,
+  updateCurrentAccount,
+  upgradeGuestWithEmail,
 } from '@/src/features/auth/auth.api';
-import { ApiError, setApiToken } from '@/src/services/api/client';
 import {
-  removeSecureItem,
+  buildAccountPatch,
+  preserveGuestCheckInsForAccount,
+  readLocalProfile,
+} from '@/src/features/auth/auth.migration';
+import { ApiError, setApiToken } from '@/src/services/api/client';
+import { detachNotificationDevice } from '@/src/services/notifications/push';
+import {
   getSecureItem,
+  removeSecureItem,
   setSecureItem,
 } from '@/src/services/storage/secure-storage';
-import { getJSON, removeStorageItem, setJSON } from '@/src/services/storage/storage';
+import {
+  getJSON,
+  removeStorageItem,
+  setJSON,
+} from '@/src/services/storage/storage';
 import {
   SECURE_STORAGE_KEYS,
   STORAGE_KEYS,
@@ -32,14 +46,50 @@ async function clearPersistedSession() {
   ]);
 }
 
+async function trySyncGuestContext(account, {
+  displayName,
+  overwriteProfile = false,
+} = {}) {
+  const localProfile = await readLocalProfile();
+
+  await preserveGuestCheckInsForAccount(account?.id);
+
+  try {
+    const updated = await updateCurrentAccount(
+      buildAccountPatch(account, localProfile, {
+        displayName,
+        overwriteProfile,
+      }),
+    );
+
+    return {
+      account: updated,
+      warning: '',
+    };
+  } catch (error) {
+    return {
+      account,
+      warning:
+        'Your account is ready. Your local check-ins are safe, but some profile details could not sync yet.',
+      error,
+    };
+  }
+}
+
 export const useAuthStore = create((set, get) => ({
   token: null,
   sessionType: null,
   account: null,
   isGuest: true,
   isReady: false,
+  authBusy: false,
+  migrationWarning: '',
 
   setSession: async ({ token, account }) => {
+    if (get().token && get().account?.id && get().account.id !== account?.id) {
+      await detachNotificationDevice(get().token, get().account.id);
+    }
+
     const isGuest = Boolean(account?.settings_data?.guest);
     const sessionType = isGuest ? 'guest' : 'account';
 
@@ -52,6 +102,24 @@ export const useAuthStore = create((set, get) => ({
       account,
       isGuest,
       isReady: true,
+    });
+  },
+
+  replaceAccount: async (account) => {
+    const token = get().token;
+
+    if (!token || !account) {
+      return;
+    }
+
+    const isGuest = Boolean(account?.settings_data?.guest);
+    const sessionType = isGuest ? 'guest' : 'account';
+
+    await persistSession(token, sessionType, account);
+    set({
+      account,
+      sessionType,
+      isGuest,
     });
   },
 
@@ -79,7 +147,6 @@ export const useAuthStore = create((set, get) => ({
     }
 
     setApiToken(token);
-
     set({
       token,
       sessionType,
@@ -93,7 +160,6 @@ export const useAuthStore = create((set, get) => ({
       const resolvedSessionType = isGuest ? 'guest' : 'account';
 
       await persistSession(token, resolvedSessionType, account);
-
       set({
         account,
         sessionType: resolvedSessionType,
@@ -119,7 +185,94 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  clearSession: async () => {
+  signIn: async (email, password) => {
+    set({ authBusy: true, migrationWarning: '' });
+
+    try {
+      const response = await loginWithEmail(email.trim().toLowerCase(), password);
+      await get().setSession(response);
+
+      const migrated = await trySyncGuestContext(response.account, {
+        overwriteProfile: false,
+      });
+
+      await get().replaceAccount(migrated.account);
+      set({ migrationWarning: migrated.warning });
+
+      return migrated.account;
+    } finally {
+      set({ authBusy: false });
+    }
+  },
+
+  registerFromGuest: async ({ email, password, displayName, profile }) => {
+    set({ authBusy: true, migrationWarning: '' });
+
+    try {
+      let response;
+
+      if (get().isGuest) {
+        try {
+          response = await upgradeGuestWithEmail(
+            email.trim().toLowerCase(),
+            password,
+            displayName,
+          );
+        } catch (error) {
+          if (!(error instanceof ApiError) || ![404, 405].includes(error.status)) {
+            throw error;
+          }
+        }
+      }
+
+      if (!response) {
+        response = await registerWithEmail(email.trim().toLowerCase(), password);
+      }
+
+      await get().setSession(response);
+      await preserveGuestCheckInsForAccount(response.account?.id);
+
+      let account = response.account;
+      let warning = '';
+
+      try {
+        account = await updateCurrentAccount(
+          buildAccountPatch(account, profile, {
+            displayName,
+            overwriteProfile: true,
+          }),
+        );
+        await get().replaceAccount(account);
+      } catch (error) {
+        warning =
+          'Your account was created and your local check-ins are safe. Some profile details will need to sync again later.';
+      }
+
+      set({ migrationWarning: warning });
+      return account;
+    } finally {
+      set({ authBusy: false });
+    }
+  },
+
+  refreshAccount: async () => {
+    const account = await getCurrentAccount();
+    await get().replaceAccount(account);
+    return account;
+  },
+
+  clearMigrationWarning: () => set({ migrationWarning: '' }),
+
+  clearSession: async ({ detachDevice = true } = {}) => {
+    if (detachDevice && get().token) {
+      try {
+        await detachNotificationDevice(get().token, get().account?.id);
+      } catch {
+        console.log("error auth.store");
+        // Local sign-out must not be blocked by a stale/offline push binding.
+      }
+    }
+
     await clearPersistedSession();
     setApiToken(null);
 
@@ -129,6 +282,8 @@ export const useAuthStore = create((set, get) => ({
       account: null,
       isGuest: true,
       isReady: false,
+      authBusy: false,
+      migrationWarning: '',
     });
   },
 }));

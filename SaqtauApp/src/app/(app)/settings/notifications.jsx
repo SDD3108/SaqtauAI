@@ -1,13 +1,5 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import NotificationSettingsScreen from '@/src/features/notifications/components/NotificationSettingsScreen';
 
-const notifications = () => {
-    return (
-        <SafeAreaView>
-            <Text>notifications</Text>
-        </SafeAreaView>
-    );
-};
-
-export default notifications;
+export default function NotificationSettingsRoute() {
+  return <NotificationSettingsScreen />;
+}

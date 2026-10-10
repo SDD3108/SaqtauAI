@@ -1,22 +1,15 @@
 import { Clock3, Timer } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 
+import useI18n from '@/src/features/localization/hooks/useI18n';
+
 function Item({ icon: Icon, label, value }) {
   return (
     <View className="flex-1 flex-row items-center px-4">
-      <Icon
-        size={24}
-        strokeWidth={1.8}
-        color="#181027"
-      />
+      <Icon size={24} strokeWidth={1.8} color="#181027" />
       <View className="ml-3 flex-1">
-        <Text className="font-inter-medium text-[13px] text-[#8E879B]">
-          {label}
-        </Text>
-        <Text
-          className="mt-1 font-inter-medium text-[13px] text-[#8E879B]"
-          numberOfLines={1}
-        >
+        <Text className="font-inter-medium text-[13px] text-[#8E879B]">{label}</Text>
+        <Text className="mt-1 font-inter-medium text-[13px] text-[#8E879B]" numberOfLines={1}>
           {value}
         </Text>
       </View>
@@ -24,25 +17,14 @@ function Item({ icon: Icon, label, value }) {
   );
 }
 
-export default function CheckInInfoStrip({
-  lastCheckIn,
-  duration,
-}) {
+export default function CheckInInfoStrip({ lastCheckIn, duration }) {
+  const { t } = useI18n();
+
   return (
     <View className="mt-3 h-[62px] flex-row items-center rounded-[15px] border border-[#B7B2BD]">
-      <Item
-        icon={Clock3}
-        label="Last check-in"
-        value={lastCheckIn}
-      />
-
+      <Item icon={Clock3} label={t('dashboard.lastCheckIn')} value={lastCheckIn} />
       <View className="h-[34px] w-px bg-[#A9A4AF]" />
-
-      <Item
-        icon={Timer}
-        label="Check-in time"
-        value={duration}
-      />
+      <Item icon={Timer} label={t('dashboard.checkInTime')} value={duration} />
     </View>
   );
 }

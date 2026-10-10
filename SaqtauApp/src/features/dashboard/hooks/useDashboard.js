@@ -2,7 +2,11 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { useAuthStore } from '@/src/features/auth/auth.store';
-import { getLocalGuestCheckIns } from '@/src/features/check-in/check-in.storage';
+import {
+  getLocalGuestCheckIns,
+  getTransferredAccountCheckIns,
+  mergeCheckInsById,
+} from '@/src/features/check-in/check-in.storage';
 import {
   getDashboardMeasurements,
   getDashboardSummary,
@@ -16,6 +20,7 @@ import {
 
 export default function useDashboard() {
   const isGuest = useAuthStore((state) => state.isGuest);
+  const accountId = useAuthStore((state) => state.account?.id);
 
   const [data, setData] = useState({
     summary: null,
@@ -43,30 +48,46 @@ export default function useDashboard() {
         let measurements = [];
 
         if (isGuest) {
-          // Guest Home is intentionally local-first. Part 3 stores the
-          // completed result on-device, so Home does not need to read a
-          // server-side dashboard summary for a guest account.
           measurements = await getLocalGuestCheckIns();
         } else {
-          const [summaryResult, measurementsResult] =
+          const [summaryResult, measurementsResult, transferredResult] =
             await Promise.allSettled([
               getDashboardSummary(),
               getDashboardMeasurements(),
+              getTransferredAccountCheckIns(accountId),
             ]);
 
           if (summaryResult.status === 'fulfilled') {
             summary = summaryResult.value;
           }
 
-          if (measurementsResult.status === 'fulfilled') {
-            measurements = measurementsResult.value;
-          }
+          const serverMeasurements =
+            measurementsResult.status === 'fulfilled'
+              ? measurementsResult.value
+              : [];
+          const transferredMeasurements =
+            transferredResult.status === 'fulfilled'
+              ? transferredResult.value
+              : [];
+
+          measurements = mergeCheckInsById(
+            transferredMeasurements,
+            serverMeasurements,
+          );
 
           if (
             summaryResult.status === 'rejected' &&
-            measurementsResult.status === 'rejected'
+            measurementsResult.status === 'rejected' &&
+            !transferredMeasurements.length
           ) {
             throw measurementsResult.reason || summaryResult.reason;
+          }
+
+          if (
+            measurementsResult.status === 'rejected' &&
+            transferredMeasurements.length
+          ) {
+            setError('Showing your transferred check-in while server data refreshes.');
           }
         }
 
@@ -83,16 +104,13 @@ export default function useDashboard() {
           message: getDashboardMessage(summary, latest),
         });
       } catch (loadError) {
-        setError(
-          loadError?.message ||
-            'Could not load your latest wellness data.',
-        );
+        setError(loadError?.message || 'Could not load your latest wellness data.');
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [isGuest],
+    [accountId, isGuest],
   );
 
   useFocusEffect(

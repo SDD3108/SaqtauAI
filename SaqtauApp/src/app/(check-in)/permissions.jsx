@@ -1,3 +1,4 @@
+import useI18n from '@/src/features/localization/hooks/useI18n';
 import {
   Activity,
   Camera,
@@ -49,6 +50,7 @@ function normalizePermission(permission) {
 }
 
 export default function PermissionsScreen() {
+  const { t } = useI18n();
   const [camera, setCamera] = useState(null);
   const [motion, setMotion] = useState(null);
   const [microphone, setMicrophone] = useState(null);
@@ -218,7 +220,7 @@ export default function PermissionsScreen() {
         !motionResult?.granted
       ) {
         setMessage(
-          'Camera and Motion access are required for this check-in.',
+          t('checkin.required'),
         );
         return;
       }
@@ -252,7 +254,7 @@ export default function PermissionsScreen() {
           className="h-11 w-11 items-start justify-center"
         >
           <Text className="font-inter-medium text-[16px] text-[#181027]">
-            Back
+            {t('common.back')}
           </Text>
         </Pressable>
 
@@ -266,34 +268,34 @@ export default function PermissionsScreen() {
           </View>
 
           <Text className="mt-6 font-inter-extrabold text-[34px] leading-[40px] tracking-[-1.1px] text-[#181027]">
-            Your permissions,{`\n`}your choice.
+            {t('checkin.permissionsTitle')}
           </Text>
 
           <Text className="mt-4 max-w-[340px] font-inter text-[16px] leading-[23px] text-[#807B89]">
-            SaqtauAI needs camera and motion access to run a 60-second check-in. Microphone access is optional for future voice features.
+            {t('checkin.permissionsBody')}
           </Text>
         </View>
 
         <View className="mt-8">
           <PermissionRow
-            title="Camera"
-            description="Used for your 60-second face check-in."
+            title={t('checkin.camera')}
+            description={t('checkin.cameraBody')}
             Icon={Camera}
             permission={camera}
             onPress={() => requestSingle('camera')}
           />
 
           <PermissionRow
-            title="Motion"
-            description="Helps detect movement and keep the reading stable."
+            title={t('checkin.motion')}
+            description={t('checkin.motionBody')}
             Icon={Activity}
             permission={motion}
             onPress={() => requestSingle('motion')}
           />
 
           <PermissionRow
-            title="Microphone"
-            description="Optional. Used later for voice conversations, not this recording."
+            title={t('checkin.microphone')}
+            description={t('checkin.microphoneBody')}
             Icon={Mic}
             permission={microphone}
             optional
@@ -321,14 +323,14 @@ export default function PermissionsScreen() {
             ) : (
               <Text className="font-inter-semibold text-[16px] text-white">
                 {requiredGranted
-                  ? 'Continue'
-                  : 'Allow & continue'}
+                  ? t('checkin.continue')
+                  : t('checkin.allowContinue')}
               </Text>
             )}
           </Pressable>
 
           <Text className="mt-3 text-center font-inter text-[12px] leading-[17px] text-[#807B89]">
-            You can change permissions later in iOS Settings.
+            {t('checkin.permissionsLater')}
           </Text>
         </View>
       </View>

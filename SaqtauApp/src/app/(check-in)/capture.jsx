@@ -1,3 +1,4 @@
+import useI18n from '@/src/features/localization/hooks/useI18n';
 import { CameraView } from 'expo-camera';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -30,6 +31,7 @@ function formatSeconds(value) {
 }
 
 export default function CaptureScreen() {
+  const { t } = useI18n();
   const cameraRef = useRef(null);
   const timerRef = useRef(null);
   const recordingStartedAtRef = useRef(null);
@@ -134,21 +136,21 @@ export default function CaptureScreen() {
 
       if (interruptedRef.current) {
         setError(
-          'The check-in was interrupted. Keep SaqtauAI open and try again.',
+          t('checkin.captureInterrupted'),
         );
         return;
       }
 
       if (!video?.uri) {
         setError(
-          'The camera did not return a recording. Please try again.',
+          t('checkin.cameraNoRecording'),
         );
         return;
       }
 
       if (elapsed < MIN_VALID_SECONDS) {
         setError(
-          'The recording ended too early. Please complete the full check-in.',
+          t('checkin.recordingTooShort'),
         );
         return;
       }
@@ -158,7 +160,7 @@ export default function CaptureScreen() {
     } catch (recordError) {
       setError(
         recordError?.message ||
-          'Could not record your check-in. Please try again.',
+          t('checkin.recordError'),
       );
     } finally {
       recordingRef.current = false;
@@ -177,9 +179,9 @@ export default function CaptureScreen() {
 
   const stabilityLabel = motion.available
     ? motion.stable
-      ? 'Nice and steady'
-      : 'Hold still'
-    : 'Motion unavailable';
+      ? t('checkin.steady')
+      : t('checkin.holdStill')
+    : t('checkin.motionUnavailable');
 
   return (
     <View className="flex-1 bg-black">
@@ -201,7 +203,7 @@ export default function CaptureScreen() {
         onMountError={(event) => {
           setError(
             event?.message ||
-              'Could not start the camera.',
+              t('checkin.cameraError'),
           );
         }}
       />
@@ -232,7 +234,7 @@ export default function CaptureScreen() {
               <Text className="font-inter-semibold text-[14px] text-white">
                 {recording
                   ? formatSeconds(secondsLeft)
-                  : '60 sec'}
+                  : t('checkin.sixtySec')}
               </Text>
             </View>
           </View>
@@ -265,12 +267,12 @@ export default function CaptureScreen() {
             <View className="rounded-[24px] bg-black/45 px-5 py-5">
               <Text className="text-center font-inter-bold text-[23px] leading-[29px] text-white">
                 {recording
-                  ? 'Keep your face still'
-                  : 'Ready for your check-in?'}
+                  ? t('checkin.keepStill')
+                  : t('checkin.readyCapture')}
               </Text>
 
               <Text className="mt-2 text-center font-inter text-[14px] leading-[20px] text-white/75">
-                Keep your face inside the frame, look at the camera, and stay as still as you comfortably can.
+                {t('checkin.captureInstructions')}
               </Text>
 
               {error ? (
@@ -296,13 +298,13 @@ export default function CaptureScreen() {
                   />
 
                   <Text className="ml-2 font-inter-semibold text-[16px] text-[#181027]">
-                    Start check-in
+                    {t('onboarding.startCheckIn')}
                   </Text>
                 </Pressable>
               ) : (
                 <View className="mt-5 h-[58px] items-center justify-center rounded-[16px] bg-white/15">
                   <Text className="font-inter-semibold text-[16px] text-white">
-                    Recording…
+                    {t('checkin.recording')}
                   </Text>
                 </View>
               )}

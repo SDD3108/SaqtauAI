@@ -1,3 +1,5 @@
+import { tNow } from '@/src/features/localization/localization.store';
+import useI18n from '@/src/features/localization/hooks/useI18n';
 import { router } from 'expo-router';
 import {
   CheckCircle2,
@@ -43,7 +45,8 @@ function formatStress(level) {
     return '—';
   }
 
-  return `${level.charAt(0).toUpperCase()}${level.slice(1)}`;
+  const key = ['low', 'medium', 'high'].includes(String(level).toLowerCase()) ? `history.${String(level).toLowerCase()}` : null;
+  return key ? tNow(key) : String(level);
 }
 
 function formatSignalQuality(value) {
@@ -63,6 +66,7 @@ function formatSignalQuality(value) {
 }
 
 export default function ResultScreen() {
+  const { t } = useI18n();
   const storedMeasurement = useCheckInStore(
     (state) => state.measurement,
   );
@@ -94,7 +98,7 @@ export default function ResultScreen() {
 
         if (!id) {
           throw new Error(
-            'No completed check-in was found.',
+            t('checkin.noCompleted'),
           );
         }
 
@@ -125,7 +129,7 @@ export default function ResultScreen() {
         if (!cancelled) {
           setLoadError(
             error?.message ||
-              'Could not load your result.',
+              t('checkin.loadError'),
           );
         }
       } finally {
@@ -173,11 +177,11 @@ export default function ResultScreen() {
       <SafeAreaView className="flex-1 bg-[#ECECEC] px-6">
         <View className="flex-1 items-center justify-center">
           <Text className="text-center font-inter-bold text-[24px] text-[#181027]">
-            Result unavailable
+            {t('checkin.resultUnavailable')}
           </Text>
           <Text className="mt-3 text-center font-inter text-[15px] leading-[22px] text-[#807B89]">
             {loadError ||
-              'We could not load this check-in.'}
+              t('checkin.resultUnavailableBody')}
           </Text>
         </View>
 
@@ -187,7 +191,7 @@ export default function ResultScreen() {
           className="mb-4 h-[58px] items-center justify-center rounded-[16px] bg-[#181027]"
         >
           <Text className="font-inter-semibold text-[16px] text-white">
-            Back to Home
+            {t('checkin.backHome')}
           </Text>
         </Pressable>
       </SafeAreaView>
@@ -223,27 +227,27 @@ export default function ResultScreen() {
           </View>
 
           <Text className="ml-3 font-inter-semibold text-[14px] text-[#397A5A]">
-            Check-in complete
+            {t('checkin.complete')}
           </Text>
         </View>
 
         <Text className="mt-7 font-inter-extrabold text-[34px] leading-[40px] tracking-[-1.1px] text-[#181027]">
-          Here’s what your{`\n`}body shared.
+          {t('checkin.resultTitle')}
         </Text>
 
         <Text className="mt-3 font-inter text-[16px] leading-[23px] text-[#807B89]">
-          A calm snapshot from this check-in. Look for patterns over time rather than a single number.
+          {t('checkin.resultBody')}
         </Text>
 
         <View className="mt-8 flex-row flex-wrap justify-between gap-y-3">
           <MetricCard
-            label="Heart rate"
+            label={t('checkin.heartRate')}
             value={round(measurement.bpm)}
             unit="BPM"
           />
 
           <MetricCard
-            label="HRV"
+            label={t('checkin.hrv')}
             value={round(
               measurement.hrv_rmssd_ms,
               1,
@@ -253,7 +257,7 @@ export default function ResultScreen() {
           />
 
           <MetricCard
-            label="HRV"
+            label={t('checkin.hrv')}
             value={round(
               measurement.hrv_sdnn_ms,
               1,
@@ -263,7 +267,7 @@ export default function ResultScreen() {
           />
 
           <MetricCard
-            label="Breathing"
+            label={t('checkin.breathing')}
             value={round(
               measurement.breathing_rate_bpm,
               1,
@@ -272,29 +276,25 @@ export default function ResultScreen() {
           />
 
           <MetricCard
-            label="Stress"
+            label={t('checkin.stress')}
             value={formatStress(
               measurement.stress_level,
             )}
             helper={
               measurement.stress_index != null
-                ? `Index ${round(
-                    measurement.stress_index,
-                  )}`
+                ? t('checkin.index', { value: round(measurement.stress_index) })
                 : null
             }
           />
 
           <MetricCard
-            label="Signal quality"
+            label={t('checkin.signalQuality')}
             value={formatSignalQuality(
               measurement.signal_quality,
             )}
             helper={
               measurement.face_coverage != null
-                ? `Face coverage ${formatSignalQuality(
-                    measurement.face_coverage,
-                  )}`
+                ? t('checkin.faceCoverage', { value: formatSignalQuality(measurement.face_coverage) })
                 : null
             }
           />
@@ -303,7 +303,7 @@ export default function ResultScreen() {
         {warnings.length ? (
           <View className="mt-5 rounded-[20px] bg-white px-4 py-4">
             <Text className="font-inter-semibold text-[14px] text-[#181027]">
-              Reading notes
+              {t('checkin.readingNotes')}
             </Text>
 
             {warnings.slice(0, 3).map((warning) => (
@@ -325,7 +325,7 @@ export default function ResultScreen() {
           />
 
           <Text className="ml-3 flex-1 font-inter text-[12px] leading-[18px] text-white/80">
-            SaqtauAI is a wellness product. These insights are not a diagnosis or a substitute for medical care.
+            {t('checkin.wellnessDisclaimer')}
           </Text>
         </View>
 
@@ -335,7 +335,7 @@ export default function ResultScreen() {
           className="mt-8 h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90"
         >
           <Text className="font-inter-semibold text-[16px] text-white">
-            Done
+            {t('checkin.finish')}
           </Text>
         </Pressable>
 
@@ -345,7 +345,7 @@ export default function ResultScreen() {
           className="mt-2 h-12 items-center justify-center"
         >
           <Text className="font-inter-semibold text-[15px] text-[#181027]">
-            Check in again
+            {t('checkin.checkInAgain')}
           </Text>
         </Pressable>
       </ScrollView>

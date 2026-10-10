@@ -1,10 +1,8 @@
+import { getCurrentLocale, tNow } from '@/src/features/localization/localization.store';
+
 export function getMeasurementDate(measurement) {
   const value = measurement?.processed_at || measurement?.created_at;
-
-  if (!value) {
-    return null;
-  }
-
+  if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
@@ -18,20 +16,13 @@ export function sortNewest(items = []) {
 }
 
 export function filterCompleted(items = []) {
-  return sortNewest(
-    items.filter((item) => item?.status === 'completed'),
-  );
+  return sortNewest(items.filter((item) => item?.status === 'completed'));
 }
 
 export function filterByPeriod(items, period) {
   const days = Number.parseInt(period, 10);
-
-  if (!Number.isFinite(days)) {
-    return items;
-  }
-
+  if (!Number.isFinite(days)) return items;
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-
   return items.filter((item) => {
     const time = getMeasurementDate(item)?.getTime();
     return time ? time >= cutoff : false;
@@ -39,75 +30,50 @@ export function filterByPeriod(items, period) {
 }
 
 export function average(items, selector) {
-  const values = items
-    .map(selector)
-    .map(Number)
-    .filter(Number.isFinite);
-
-  if (!values.length) {
-    return null;
-  }
-
+  const values = items.map(selector).map(Number).filter(Number.isFinite);
+  if (!values.length) return null;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 export function formatNumber(value, digits = 0) {
   const number = Number(value);
+  if (!Number.isFinite(number)) return '—';
 
-  if (!Number.isFinite(number)) {
-    return '—';
-  }
-
-  return number.toFixed(digits).replace(/\.0+$/, '');
+  return new Intl.NumberFormat(getCurrentLocale(), {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+  }).format(number);
 }
 
 export function formatMeasurementDate(measurement) {
   const date = getMeasurementDate(measurement);
+  if (!date) return tNow('common.unknownDate');
 
-  if (!date) {
-    return 'Unknown date';
-  }
-
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(getCurrentLocale(), {
     month: 'short',
     day: 'numeric',
-    year:
-      date.getFullYear() === new Date().getFullYear()
-        ? undefined
-        : 'numeric',
+    year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
   });
 }
 
 export function formatMeasurementTime(measurement) {
   const date = getMeasurementDate(measurement);
-
-  if (!date) {
-    return '';
-  }
-
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  if (!date) return '';
+  return date.toLocaleTimeString(getCurrentLocale(), { hour: 'numeric', minute: '2-digit' });
 }
 
 export function stressLabel(value) {
   const level = String(value || '').trim().toLowerCase();
-
-  if (!level) {
-    return '—';
-  }
-
+  if (!level) return '—';
+  if (level === 'low') return tNow('history.low');
+  if (level === 'medium' || level === 'moderate') return tNow('history.medium');
+  if (level === 'high') return tNow('history.high');
   return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
 export function signalPercent(value) {
   const number = Number(value);
-
-  if (!Number.isFinite(number)) {
-    return null;
-  }
-
+  if (!Number.isFinite(number)) return null;
   const normalized = number <= 1 ? number * 100 : number;
   return Math.max(0, Math.min(100, Math.round(normalized)));
 }

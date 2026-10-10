@@ -1,13 +1,9 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
-const ScreenTime = () => {
-    return (
-        <SafeAreaView>
-            <Text>ScreenTime</Text>
-        </SafeAreaView>
-    );
-};
+import ScreenTimeScreen from '@/src/features/family/components/ScreenTimeScreen';
 
-export default ScreenTime;
+export default function Route() {
+  const { accountId } = useLocalSearchParams();
+  const id = Array.isArray(accountId) ? accountId[0] : accountId;
+  return <ScreenTimeScreen accountId={id} />;
+}

@@ -1,13 +1,5 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import PermissionsSettingsScreen from '@/src/features/settings/components/PermissionsSettingsScreen';
 
-const permissions = () => {
-    return (
-        <SafeAreaView>
-            <Text>permissions</Text>
-        </SafeAreaView>
-    );
-};
-
-export default permissions;
+export default function PermissionsRoute() {
+  return <PermissionsSettingsScreen />;
+}

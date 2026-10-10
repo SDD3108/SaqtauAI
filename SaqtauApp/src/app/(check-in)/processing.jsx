@@ -1,3 +1,5 @@
+import { tNow } from '@/src/features/localization/localization.store';
+import useI18n from '@/src/features/localization/hooks/useI18n';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Stack, router } from 'expo-router';
 import {
@@ -52,6 +54,7 @@ async function deleteLocalVideo(uri) {
 }
 
 export default function ProcessingScreen() {
+  const { t } = useI18n();
   const videoUri = useCheckInStore(
     (state) => state.videoUri,
   );
@@ -175,11 +178,11 @@ export default function ProcessingScreen() {
           setScreenState('failed');
           setStoreError(
             measurement.failure_detail ||
-              'We could not process this check-in.',
+              t('checkin.processFailed'),
           );
           setMessage(
             measurement.failure_detail ||
-              'We could not process this check-in. Please try again.',
+              t('checkin.processFailed'),
           );
           return;
         }
@@ -200,7 +203,7 @@ export default function ProcessingScreen() {
         setScreenState('offline');
         setMessage(
           error?.message ||
-            'Could not check your result. We will keep your pending check-in.',
+            t('checkin.statusError'),
         );
 
         if (scheduleNext) {
@@ -266,7 +269,7 @@ export default function ProcessingScreen() {
       .then(async (measurement) => {
         if (!measurement?.id) {
           throw new Error(
-            'The server accepted the upload without a measurement ID.',
+            tNow('checkin.uploadNoId'),
           );
         }
 
@@ -301,11 +304,11 @@ export default function ProcessingScreen() {
         setScreenState('upload-error');
         setStoreError(
           error?.message ||
-            'Could not upload your check-in.',
+            tNow('checkin.uploadError'),
         );
         setMessage(
           error?.message ||
-            'Could not upload your check-in. Please try again.',
+            tNow('checkin.uploadError'),
         );
         uploadStartedRef.current = false;
       });
@@ -402,26 +405,26 @@ export default function ProcessingScreen() {
 
           <Text className="mt-9 text-center font-inter-extrabold text-[30px] leading-[36px] tracking-[-0.9px] text-[#181027]">
             {isUploading
-              ? 'Uploading your check-in'
+              ? t('checkin.uploading')
               : isFailed
-                ? 'We couldn’t read that signal'
+                ? t('checkin.signalFailed')
                 : isUploadError
-                  ? 'Upload interrupted'
+                  ? t('checkin.uploadInterrupted')
                   : isOffline
-                    ? 'Still working on it'
-                    : 'Reading your signal'}
+                    ? t('checkin.stillWorking')
+                    : t('checkin.readingSignal')}
           </Text>
 
           <Text className="mt-4 max-w-[330px] text-center font-inter text-[16px] leading-[23px] text-[#807B89]">
             {isUploading
-              ? `Securely sending the recording for processing. ${progressPercent}%`
+              ? t('checkin.uploadBody', { percent: progressPercent })
               : isFailed
                 ? message
                 : isUploadError
                   ? message
                   : isOffline
-                    ? 'Your check-in is saved on the server. Reconnect and we can check the result again.'
-                    : 'This can take a little while. You can keep SaqtauAI open; we check the result about once a minute.'}
+                    ? t('checkin.offlinePending')
+                    : t('checkin.processingBody')}
           </Text>
 
           {isUploading ? (
@@ -447,7 +450,7 @@ export default function ProcessingScreen() {
               className="h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90"
             >
               <Text className="font-inter-semibold text-[16px] text-white">
-                Retry upload
+                {t('checkin.retryUpload')}
               </Text>
             </Pressable>
           ) : null}
@@ -467,7 +470,7 @@ export default function ProcessingScreen() {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text className="font-inter-semibold text-[16px] text-white">
-                  Check again
+                  {t('checkin.checkAgain')}
                 </Text>
               )}
             </Pressable>
@@ -480,7 +483,7 @@ export default function ProcessingScreen() {
               className="h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90"
             >
               <Text className="font-inter-semibold text-[16px] text-white">
-                Try another check-in
+                {t('checkin.tryAnother')}
               </Text>
             </Pressable>
           ) : null}
@@ -490,7 +493,7 @@ export default function ProcessingScreen() {
           !isOffline &&
           !isFailed ? (
             <Text className="text-center font-inter text-[12px] leading-[17px] text-[#807B89]">
-              Your result will open automatically when it’s ready.
+              {t('checkin.opensAutomatically')}
             </Text>
           ) : null}
         </View>
