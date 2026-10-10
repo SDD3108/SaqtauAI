@@ -7,7 +7,7 @@ import NotificationsIcon from '@/assets/images/notifications.svg';
 import PrivacyIcon from '@/assets/images/privacy.svg';
 import ProfileIcon from '@/assets/images/profile.svg';
 import SupportIcon from '@/assets/images/support.svg';
-import YourChoiceIcon from '@/assets/images/your choice.svg';
+import YourChoiceIcon from '@/assets/images/permissions.svg';
 import { useAuthStore } from '@/src/features/auth/auth.store';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import {

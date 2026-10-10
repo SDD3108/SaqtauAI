@@ -1,10 +1,12 @@
 import { getCurrentLanguage, tNow } from '@/src/features/localization/localization.store';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import { router } from 'expo-router';
-import { Pause, Play, Settings } from 'lucide-react-native';
+import { ChevronLeft, LockKeyhole, Pause, Play, Send as SendOutline, Settings, X } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  ScrollView,
   Linking,
   Pressable,
   Text,
@@ -12,13 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import BackIcon from '@/assets/images/back.svg';
-import CancelIcon from '@/assets/images/cancel.svg';
-import ConversationsIcon from '@/assets/images/conversations.svg';
-import RecordingIcon from '@/assets/images/recording.svg';
-import SendIcon from '@/assets/images/send.svg';
 import StopIcon from '@/assets/images/stop.svg';
 import { transcribeAiAudio } from '@/src/features/ai/ai.api';
+import AIChatNavigation from '@/src/features/ai/components/AIChatNavigation';
+import ChatArtwork from '@/src/features/ai/components/ChatArtwork';
 import VoiceWaveform from '@/src/features/ai/components/VoiceWaveform';
 import useVoiceRecorder, {
   deleteVoiceRecording,
@@ -47,6 +46,7 @@ export default function VoiceRecordingScreen() {
     stop,
     discard,
   } = useVoiceRecorder({ autoStart: true });
+  const [viewportHeight, setViewportHeight] = useState(0);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
 
@@ -99,145 +99,81 @@ export default function VoiceRecordingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom']}>
-      <View className="flex-row items-center px-5 pt-2">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('ai.goBack')}
-          disabled={sending}
-          onPress={cancel}
-          className="h-11 w-11 items-center justify-center rounded-full bg-white active:opacity-70"
-        >
-          <BackIcon width={22} height={22} />
+    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom', 'left', 'right']}>
+      <View className="w-full max-w-[620px] flex-row items-center self-center px-3 pb-0.5 pt-5">
+        <Pressable accessibilityRole="button" accessibilityLabel={t('ai.goBack')} disabled={sending} onPress={cancel} className="h-11 w-11 items-center justify-center rounded-full active:opacity-60">
+          <ChevronLeft size={28} strokeWidth={2.5} color="#8E879B" />
         </Pressable>
-        <Text className="ml-4 font-inter-extrabold text-[22px] tracking-[-0.6px] text-[#181027]">
-          {t('ai.voiceTitle')}
-        </Text>
+        <Text accessibilityRole="header" className="flex-1 px-1 text-center font-inter-semibold text-[26px] leading-[33px] tracking-[-0.7px] text-[#181027]">{t('ai.homeTitle')}</Text>
+        <View className="h-11 w-11" />
       </View>
 
-      <View className="flex-1 px-6 pt-9">
-        <View className="items-center">
-          <View className="h-[104px] w-[104px] items-center justify-center rounded-full bg-white">
-            <RecordingIcon width={54} height={54} />
-          </View>
+      <ScrollView className="flex-1" onLayout={({ nativeEvent }) => setViewportHeight(nativeEvent.layout.height)} contentContainerStyle={{ alignItems: 'center', flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <View className="w-full max-w-[620px] px-4 pb-5" style={{ minHeight: Math.max(600, viewportHeight) }}>
+          <View style={{ flexGrow: 1.5, minHeight: 92 }} />
+          <View className="items-center">
+            <VoiceWaveform metering={recorderState?.metering} durationMillis={recorderState?.durationMillis} active={isActive} />
+            <Text accessibilityLiveRegion="polite" className="mt-4 text-center font-inter-semibold text-[32px] leading-[40px] tracking-[-0.8px] text-[#181027]">
+              {sending ? t('ai.voiceTranscribing') : isActive ? t('ai.voiceListeningDesign') : statusTitle(phase)}
+            </Text>
+            <Text className="mt-4 max-w-[250px] text-center font-inter-medium text-[15px] leading-[21px] text-[#807B89]">{t('ai.voiceCaptureHint')}</Text>
+            <Text accessibilityLabel={t('ai.voiceDuration')} className="mt-2 text-center font-inter-medium text-[12px] tabular-nums text-[#807B89]">{formatVoiceDuration(recorderState?.durationMillis)}</Text>
 
-          <Text className="mt-6 text-center font-inter-extrabold text-[29px] tracking-[-0.9px] text-[#181027]">
-            {statusTitle(phase)}
-          </Text>
-          <Text className="mt-2 font-inter-semibold text-[18px] tabular-nums text-[#77717F]">
-            {formatVoiceDuration(recorderState?.durationMillis)}
-          </Text>
-        </View>
-
-        <View className="mt-8 rounded-[28px] bg-white px-4 py-6">
-          <VoiceWaveform
-            metering={recorderState?.metering}
-            durationMillis={recorderState?.durationMillis}
-            active={isActive}
-          />
-
-          {phase === 'requesting' ? (
-            <ActivityIndicator className="mt-5" color="#208AEF" />
-          ) : null}
-
-          {phase === 'denied' ? (
-            <View className="mt-5 items-center px-3">
-              <Text className="text-center font-inter text-[14px] leading-5 text-[#77717F]">
-                {t('ai.voicePermissionBody')}
-              </Text>
-              <Pressable
-                onPress={() => Linking.openSettings()}
-                className="mt-4 flex-row items-center rounded-full bg-[#181027] px-5 py-3 active:opacity-80"
-              >
-                <Settings size={17} color="white" />
-                <Text className="ml-2 font-inter-semibold text-[14px] text-white">
-                  {t('common.openSettings')}
-                </Text>
+            {phase === 'requesting' ? <ActivityIndicator className="mt-4" color="#181027" /> : null}
+            {phase === 'denied' ? (
+              <View className="mt-5 w-full max-w-[360px] items-center rounded-[20px] bg-[#F7F7F8] px-5 py-4">
+                <Text className="text-center font-inter text-[14px] leading-5 text-[#807B89]">{t('ai.voicePermissionBody')}</Text>
+                <Pressable accessibilityRole="button" onPress={() => Linking.openSettings()} className="mt-4 min-h-11 flex-row items-center rounded-full bg-[#181027] px-5 py-3 active:opacity-80">
+                  <Settings size={17} color="white" />
+                  <Text className="ml-2 flex-shrink font-inter-semibold text-[14px] text-white">{t('common.openSettings')}</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            {phase === 'error' ? (
+              <Pressable accessibilityRole="button" disabled={sending} onPress={start} className="mt-5 min-h-11 self-center rounded-full bg-[#181027] px-6 py-3 active:opacity-80">
+                <Text className="text-center font-inter-semibold text-[14px] text-white">{t('common.retry')}</Text>
               </Pressable>
-            </View>
-          ) : null}
-
-          {phase === 'error' ? (
-            <Pressable
-              onPress={start}
-              className="mt-5 self-center rounded-full bg-[#181027] px-6 py-3 active:opacity-80"
-            >
-              <Text className="font-inter-semibold text-[14px] text-white">{t('common.retry')}</Text>
-            </Pressable>
-          ) : null}
+            ) : null}
+            {error || sendError ? (
+              <View accessibilityLiveRegion="polite" className="mt-4 w-full rounded-[18px] border border-[#F1CECE] bg-[#FFF7F7] px-4 py-3">
+                <Text className="font-inter text-[13px] leading-[19px] text-[#8B3E3E]">{sendError || error}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={{ flexGrow: 1, minHeight: 48 }} />
 
           {canControl ? (
-            <View className="mt-5 flex-row items-center justify-center gap-3">
-              <Pressable
-                onPress={phase === 'paused' ? resume : pause}
-                className="h-12 flex-row items-center justify-center rounded-full bg-[#EEECEF] px-5 active:opacity-75"
-              >
-                {phase === 'paused' ? (
-                  <Play size={18} color="#181027" fill="#181027" />
-                ) : (
-                  <Pause size={18} color="#181027" fill="#181027" />
-                )}
-                <Text className="ml-2 font-inter-semibold text-[14px] text-[#181027]">
-                  {phase === 'paused' ? t('common.resume') : t('common.pause')}
-                </Text>
+            <View className="items-center">
+              <Pressable accessibilityRole="button" accessibilityLabel={t('ai.voiceStop')} disabled={sending} onPress={stop} className={`min-h-[50px] min-w-[186px] max-w-full flex-row items-center justify-center rounded-[16px] bg-[#D9D9D9] px-6 py-3 active:opacity-70 ${sending ? 'opacity-50' : ''}`}>
+                <ChatArtwork asset={StopIcon} nativeWidth={48} nativeHeight={48} width={18} />
+                <Text className="ml-4 flex-shrink text-center font-inter-semibold text-[17px] leading-[23px] text-[#181027]">{t('ai.voiceStop')}</Text>
               </Pressable>
-
-              <Pressable
-                onPress={stop}
-                className="h-12 flex-row items-center justify-center rounded-full bg-[#181027] px-5 active:opacity-80"
-              >
-                <StopIcon width={18} height={18} />
-                <Text className="ml-2 font-inter-semibold text-[14px] text-white">
-                  {t('ai.voiceStop')}
-                </Text>
+              <Pressable accessibilityRole="button" accessibilityLabel={phase === 'paused' ? t('common.resume') : t('common.pause')} disabled={sending} onPress={phase === 'paused' ? resume : pause} className="mt-1 min-h-11 flex-row items-center justify-center px-5 py-2 active:opacity-60">
+                {phase === 'paused' ? <Play size={14} color="#807B89" fill="#807B89" /> : <Pause size={14} color="#807B89" fill="#807B89" />}
+                <Text className="ml-2 font-inter-medium text-[12px] text-[#807B89]">{phase === 'paused' ? t('common.resume') : t('common.pause')}</Text>
               </Pressable>
             </View>
           ) : null}
-        </View>
 
-        {error || sendError ? (
-          <View className="mt-4 rounded-[18px] border border-[#F1CECE] bg-[#FFF7F7] px-4 py-3">
-            <Text className="font-inter text-[13px] leading-[19px] text-[#8B3E3E]">
-              {sendError || error}
-            </Text>
+          <View className="mt-4 flex-row items-center justify-between gap-2 px-3">
+            <Pressable accessibilityRole="button" accessibilityLabel={t('common.cancel')} accessibilityState={{ disabled: sending }} disabled={sending} onPress={cancel} className={`min-w-[48px] items-center py-2 active:opacity-60 ${sending ? 'opacity-50' : ''}`}>
+              <View className="h-11 w-11 items-center justify-center rounded-full border border-[#B1B1B1] bg-[#E7E7E7]"><X size={23} strokeWidth={2} color="#807B89" /></View>
+              <Text className="mt-2 max-w-[84px] text-center font-inter-medium text-[13px] leading-[18px] text-[#807B89]">{t('common.cancel')}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('ai.voicePrivacyTitle')} onPress={() => Alert.alert(t('ai.voicePrivacyTitle'), t('ai.voicePrivacy'))} className="min-h-11 flex-1 flex-row items-center justify-center gap-2 py-2 active:opacity-60">
+              <LockKeyhole size={17} strokeWidth={1.8} color="#807B89" />
+              <Text className="flex-shrink text-center font-inter-medium text-[10px] leading-[14px] text-[#807B89]">{t('ai.voicePrivacyShort')}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={t('common.send')} accessibilityState={{ disabled: !canSend || sending }} disabled={!canSend || sending} onPress={send} className={`min-w-[62px] items-center py-2 active:opacity-60 ${!canSend || sending ? 'opacity-50' : ''}`}>
+              <View className="h-[62px] w-[62px] items-center justify-center rounded-full border border-[#B1B1B1] bg-[#E7E7E7]">
+                {sending ? <ActivityIndicator color="#181027" /> : <SendOutline size={25} strokeWidth={1.8} color="#807B89" />}
+              </View>
+              <Text className="mt-2 max-w-[84px] text-center font-inter-medium text-[13px] leading-[18px] text-[#807B89]">{t('common.send')}</Text>
+            </Pressable>
           </View>
-        ) : null}
-
-        <View className="mt-5 flex-row items-start rounded-[22px] bg-[#E2E1E4] px-4 py-4">
-          <ConversationsIcon width={23} height={23} />
-          <Text className="ml-3 flex-1 font-inter-medium text-[12px] leading-[18px] text-[#716C79]">
-            {t('ai.voicePrivacy')}
-          </Text>
         </View>
-      </View>
-
-      <View className="flex-row gap-3 px-5 pb-2 pt-4">
-        <Pressable
-          disabled={sending}
-          onPress={cancel}
-          className="h-14 flex-1 flex-row items-center justify-center rounded-full bg-white active:opacity-75"
-        >
-          <CancelIcon width={20} height={20} />
-          <Text className="ml-2 font-inter-semibold text-[15px] text-[#181027]">{t('common.cancel')}</Text>
-        </Pressable>
-
-        <Pressable
-          disabled={!canSend || sending}
-          onPress={send}
-          className={`h-14 flex-1 flex-row items-center justify-center rounded-full ${
-            canSend ? 'bg-[#208AEF]' : 'bg-[#CFCBD2]'
-          }`}
-        >
-          {sending ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <>
-              <SendIcon width={20} height={20} />
-              <Text className="ml-2 font-inter-semibold text-[15px] text-white">{t('common.send')}</Text>
-            </>
-          )}
-        </Pressable>
-      </View>
+      </ScrollView>
+      <AIChatNavigation disabled={sending} onNavigate={() => discard()} onNavigationError={(navigationError) => setSendError(navigationError?.message || t('ai.voiceUnavailable'))} />
     </SafeAreaView>
   );
 }

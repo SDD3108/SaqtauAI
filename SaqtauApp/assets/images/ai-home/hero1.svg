@@ -1,0 +1,13 @@
+<svg width="776" height="215" viewBox="0 0 776 215" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M308 97C308 43.4284 351.428 0 405 0H439C492.572 0 536 43.4284 536 97C536 150.572 492.572 194 439 194H405C351.428 194 308 150.572 308 97Z" fill="#F1EBE5"/>
+<path d="M340.878 172.173C340.786 169.845 343.269 168.305 345.314 169.423L377.761 187.152C379.778 188.254 379.857 191.123 377.904 192.334L346.911 211.551C344.957 212.763 342.422 211.417 342.332 209.12L340.878 172.173Z" fill="#F1EBE5"/>
+<line x1="367" y1="108.004" x2="367" y2="94.0039" stroke="#181027" stroke-width="14" stroke-linecap="round"/>
+<line x1="395" y1="119.004" x2="395" y2="80.0039" stroke="#181027" stroke-width="14" stroke-linecap="round"/>
+<line x1="423" y1="135.008" x2="423" y2="64.0019" stroke="#181027" stroke-width="14" stroke-linecap="round"/>
+<line x1="451" y1="119.004" x2="451" y2="80.0039" stroke="#181027" stroke-width="14" stroke-linecap="round"/>
+<line x1="479" y1="108.004" x2="479" y2="94.0039" stroke="#181027" stroke-width="14" stroke-linecap="round"/>
+<circle cx="645.5" cy="191.5" r="12.5" fill="#C5C4C7"/>
+<circle cx="763.5" cy="56.5" r="12.5" fill="#B6B6B6"/>
+<circle cx="174.5" cy="12.5" r="12.5" fill="#B6B6B6"/>
+<circle cx="12.5" cy="138.5" r="12.5" fill="#B6B6B6"/>
+</svg>

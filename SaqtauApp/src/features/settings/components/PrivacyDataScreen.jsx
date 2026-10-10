@@ -120,9 +120,11 @@ export default function PrivacyDataScreen() {
         title: t('privacy.exportTitle'),
         message: json,
       });
-    } catch (error) {
+    }
+    catch(error) {
       setMessage(error?.message || t('privacy.exportError'));
-    } finally {
+    }
+    finally {
       setActionBusy('');
     }
   }

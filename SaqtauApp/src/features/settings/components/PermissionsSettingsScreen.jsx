@@ -1,16 +1,15 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, Linking, Pressable, Text, View } from 'react-native';
+import { AppState, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ChevronLeft, ChevronRight, Clock3 } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CameraIcon from '@/assets/images/camera.svg';
 import ManageIcon from '@/assets/images/manage.svg';
 import MicrophoneIcon from '@/assets/images/microphone.svg';
 import MotionIcon from '@/assets/images/motion.svg';
-import TimeIcon from '@/assets/images/time.svg';
 import YourChoiceIcon from '@/assets/images/your choice.svg';
 import useI18n from '@/src/features/localization/hooks/useI18n';
-import SettingsPage from '@/src/features/settings/components/SettingsPage';
-import SettingsRow from '@/src/features/settings/components/SettingsRow';
 import { getDeviceScreenTimeStatus } from '@/src/features/screen-time/screen-time.native';
 import {
   getCameraPermission,
@@ -26,22 +25,39 @@ import {
   requestMotionPermission,
 } from '@/src/services/permissions/motion';
 
-function PermissionStatus({ allowed, unavailable, t }) {
+// Keep this row local so other settings screens retain their current appearance.
+function PermissionRow({ title, description, status, Icon, iconWidth = 24, iconHeight = 24, onPress }) {
   return (
-    <View
-      className={`rounded-full px-3 py-1.5 ${
-        allowed ? 'bg-[#E6F1E8]' : unavailable ? 'bg-[#E9E7EC]' : 'bg-[#F4E7E8]'
-      }`}
+    <Pressable
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={`${title}. ${description}. ${status}`}
+      disabled={!onPress}
+      onPress={onPress}
+      className="min-h-[102px] flex-row items-center gap-4 px-3 py-5 active:opacity-70"
     >
-      <Text
-        className={`font-inter-semibold text-[11px] ${
-          allowed ? 'text-[#39724B]' : unavailable ? 'text-[#777180]' : 'text-[#A3434B]'
-        }`}
-      >
-        {allowed ? t('common.allowed') : unavailable ? t('common.unavailable') : t('common.off')}
-      </Text>
-    </View>
+      <View className="h-12 p-4 w-12 shrink-0 items-center justify-center rounded-[13px] bg-[#181027]">
+        <Icon width={iconWidth} height={iconHeight} />
+      </View>
+      <View className="min-w-0 flex-1">
+        <View className="flex-row flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <Text className="shrink font-inter-semibold text-[17px] leading-[23px] tracking-[-0.3px] text-[#181027]">
+            {title}
+          </Text>
+          <Text className="shrink font-inter-medium text-[13px] leading-[19px] text-[#181027]">
+            {status}
+          </Text>
+        </View>
+        <Text className="mt-2 font-inter-medium text-[14px] leading-[19px] text-[#181027]">
+          {description}
+        </Text>
+      </View>
+      <ChevronRight size={19} strokeWidth={2.2} color="#8E879B" />
+    </Pressable>
   );
+}
+
+function ScreenTimeIcon() {
+  return <Clock3 size={24} color="#ECECEC" strokeWidth={2} />;
 }
 
 export default function PermissionsSettingsScreen() {
@@ -117,6 +133,9 @@ export default function PermissionsSettingsScreen() {
   const rows = [
     {
       key: 'camera',
+      description: t('permissions.cameraDescription'),
+      iconWidth: 24,
+      iconHeight: 20,
       title: t('permissions.camera'),
       Icon: CameraIcon,
       permission: camera,
@@ -125,6 +144,9 @@ export default function PermissionsSettingsScreen() {
     },
     {
       key: 'motion',
+      description: t('permissions.motionDescription'),
+      iconWidth: 23,
+      iconHeight: 24,
       title: t('permissions.motion'),
       Icon: MotionIcon,
       permission: motion,
@@ -133,6 +155,9 @@ export default function PermissionsSettingsScreen() {
     },
     {
       key: 'microphone',
+      description: t('permissions.microphoneDescription'),
+      iconWidth: 20,
+      iconHeight: 25,
       title: t('permissions.microphone'),
       Icon: MicrophoneIcon,
       permission: microphone,
@@ -141,73 +166,93 @@ export default function PermissionsSettingsScreen() {
     },
   ];
 
-  const screenTimeAllowed = String(screenTime?.authorizationStatus || '')
-    .toLowerCase()
-    .includes('approved');
-  const screenTimeUnavailable = screenTime?.available === false;
-
   return (
-    <SettingsPage
-      title={t('permissions.title')}
-      subtitle={t('permissions.subtitle')}
-      footer={
-        <View className="flex-row items-center justify-center gap-3 px-6">
-          <YourChoiceIcon width={28} height={28} />
-          <Text className="font-inter-medium text-[14px] text-[#696477]">
-            {t('permissions.choice')}
-          </Text>
-        </View>
-      }
-    >
-      <View className="rounded-[22px] bg-[#F7F7F8] px-2 py-1">
-        {rows.map((row, index) => {
-          const allowed = Boolean(row.permission?.granted);
-          const canAsk = row.permission?.canAskAgain !== false;
-          const subtitle = permissionLabel(row.permission, row.unavailable);
-          const canRequest = !allowed && !row.unavailable && canAsk;
-
-          return (
-            <View key={row.key}>
-              <SettingsRow
-                title={row.title}
-                subtitle={busy === row.key ? t('common.requesting') : subtitle}
-                Icon={row.Icon}
-                onPress={canRequest ? row.request : undefined}
-                trailing={<PermissionStatus allowed={allowed} unavailable={row.unavailable} t={t} />}
-                showChevron={false}
-              />
-              {index < rows.length - 1 ? <View className="mx-3 h-px bg-[#E7E5EA]" /> : null}
-            </View>
-          );
-        })}
-      </View>
-
-      <View className="mt-4 rounded-[22px] bg-[#F7F7F8] px-2 py-1">
-        <SettingsRow
-          title={t('permissions.screenTime')}
-          subtitle={screenTimeLabel(screenTime)}
-          Icon={TimeIcon}
-          onPress={() => router.push('/(app)/settings/screen-time')}
-          trailing={
-            <PermissionStatus allowed={screenTimeAllowed} unavailable={screenTimeUnavailable} t={t} />
-          }
-        />
-      </View>
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => Linking.openSettings()}
-        className="mt-5 flex-row items-center justify-center gap-3 rounded-[18px] bg-white px-4 py-4 active:opacity-70"
+    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom', 'left', 'right']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 18, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
       >
-        <ManageIcon width={24} height={24} />
-        <Text className="font-inter-semibold text-[15px] text-[#181027]">
-          {t('permissions.manage')}
-        </Text>
-      </Pressable>
+        <View style={{ width: '100%', maxWidth: 560, flex: 1, alignSelf: 'center' }}>
+          <View className="mt-3 flex-row items-center">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('ai.goBack')}
+              onPress={() => router.back()}
+              className="h-11 w-11 items-center justify-center active:opacity-60"
+            >
+              <ChevronLeft size={30} strokeWidth={2.2} color="#8E879B" />
+            </Pressable>
+            <Text className="flex-1 text-center font-inter-bold text-[23px] leading-[30px] tracking-[-0.6px] text-[#181027]">
+              {t('permissions.title')}
+            </Text>
+            <View className="w-11" />
+          </View>
 
-      <Text className="mt-4 px-4 text-center font-inter-medium text-[12px] leading-[18px] text-[#918B9D]">
-        {t('permissions.explanation')}
-      </Text>
-    </SettingsPage>
+          <Text className="mb-9 mt-7 px-3 font-inter-medium text-[15px] leading-[21px] text-[#181027]">
+            {t('permissions.designIntro')}
+          </Text>
+
+          <View className="rounded-[14px] bg-[#F7F7F8] px-0.5 py-2">
+            {rows.map((row) => {
+              const allowed = Boolean(row.permission?.granted);
+              const canAsk = row.permission?.canAskAgain !== false;
+              const subtitle = permissionLabel(row.permission, row.unavailable);
+              const canRequest = !allowed && !row.unavailable && canAsk;
+
+              return (
+                <PermissionRow
+                  key={row.key}
+                  title={row.title}
+                  description={row.description}
+                  status={busy === row.key ? t('common.requesting') : subtitle}
+                  Icon={row.Icon}
+                  iconWidth={row.iconWidth}
+                  iconHeight={row.iconHeight}
+                  onPress={canRequest ? row.request : undefined}
+                />
+              );
+            })}
+          </View>
+
+          <View className="mt-3 rounded-[14px] bg-[#F7F7F8] px-0.5">
+            <PermissionRow
+              title={t('permissions.screenTime')}
+              description={t('permissions.screenTimeDescription')}
+              status={screenTimeLabel(screenTime)}
+              Icon={ScreenTimeIcon}
+              onPress={() => router.push('/(app)/settings/screen-time')}
+            />
+          </View>
+
+          <Text className="mt-8 px-3 text-center font-inter-medium text-[14px] leading-[20px] text-[#181027]">
+            {t('permissions.changeAnytime')}
+          </Text>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => Linking.openSettings()}
+            className="mt-8 min-h-[58px] flex-row items-center gap-3 rounded-[18px] border-[1.5px] border-[#8E879B] px-5 py-3 active:opacity-60"
+          >
+            <Text className="flex-1 text-center font-inter-semibold text-[16px] leading-[23px] text-[#8E879B]">
+              {Platform.OS === 'ios' ? t('permissions.manage') : t('permissions.manageSystem')}
+            </Text>
+            <ManageIcon width={20} height={20} />
+          </Pressable>
+
+          <View className="mt-4 flex-row items-start gap-4 rounded-[20px] border border-[#EEEEF0] bg-[#F3F3F5] px-4 py-4">
+            <YourChoiceIcon width={32} height={42} />
+            <View className="min-w-0 flex-1">
+              <Text className="font-inter-semibold text-[14px] leading-[20px] text-[#181027]">
+                {t('permissions.choice')}
+              </Text>
+              <Text className="mt-2 font-inter-medium text-[14px] leading-[20px] text-[#8E879B]">
+                {t('permissions.choiceBody')}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

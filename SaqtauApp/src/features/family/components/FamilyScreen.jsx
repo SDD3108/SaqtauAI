@@ -54,7 +54,7 @@ export default function FamilyScreen() {
         }
       >
         <View className="px-5 pb-2 pt-3">
-          <View className="relative min-h-[54px] flex-row items-center justify-center">
+          <View className="relative min-h-[54px] flex-row items-center justify-start">
             <Text className="font-inter-extrabold text-[32px] tracking-[-1px] text-[#181027]">
               {t('family.title')}
             </Text>
@@ -68,7 +68,7 @@ export default function FamilyScreen() {
             </Pressable>
           </View>
 
-          <Text className="mt-1 text-center font-inter-medium text-[15px] leading-[22px] text-[#8B8794]">
+          <Text className="mt-1 text-start font-inter-medium text-[15px] leading-[22px] text-[#8B8794]">
             {t('family.subtitle')}
           </Text>
         </View>

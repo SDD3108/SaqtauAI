@@ -9,8 +9,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import IntroductionLogo from '@/assets/images/check-in/introduction-logo.svg';
+import PrivateIcon from '@/assets/images/private.svg';
 import ProfileField from '@/src/components/ui/ProfileField';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import UnitSegmentedControl from '@/src/components/ui/UnitSegmentedControl';
@@ -34,6 +36,7 @@ function getDefaultDate() {
 
 export default function BeforeStartForm({ profile, onContinue }) {
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const [units, setUnits] = useState(profile.units || 'metric');
   const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth || '');
   const [height, setHeight] = useState(
@@ -130,90 +133,75 @@ export default function BeforeStartForm({ profile, onContinue }) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View className="flex-1 px-6 pb-5 pt-8">
-            <View>
-              <Text className="font-inter-extrabold text-[34px] leading-[40px] tracking-[-1.1px] text-[#181027]">
-                {t('checkin.beforeTitle')}
-              </Text>
-
-              <Text className="font-inter mt-3 max-w-[340px] text-[17px] leading-6 text-[#807B89]">
-                {t('checkin.beforeBody')}
-              </Text>
+    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom', 'left', 'right']}>
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View className="flex-1 px-6 pb-4 pt-12" style={{ width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+            <Text accessibilityRole="header" className="font-inter-extrabold text-[37px] leading-[44px] tracking-[-1.9px] text-[#181027]">
+              {t('checkin.beforeTitle')}
+            </Text>
+            <View className="mt-7 flex-row items-center gap-3">
+              <View className="h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#181027]">
+                <IntroductionLogo width={29} height={28} />
+              </View>
+              <View className="min-h-[52px] shrink rounded-[24px] rounded-bl-[3px] bg-[#D9D9D9] px-5 py-4">
+                <Text className="font-inter-semibold text-[16px] leading-[22px] tracking-[-0.7px] text-[#181027]">
+                  {t('checkin.tellAboutYou')}
+                </Text>
+              </View>
             </View>
 
-            <View className="mt-9">
-              <UnitSegmentedControl value={units} onChange={changeUnits} />
-
-              <View className="mt-5">
-                <Text className="font-inter-medium mb-2 text-[15px] text-[#5F5967]">
-                  {t('profile.dob')}
+            <View className="mt-8">
+              <Text className="mb-1.5 font-inter-semibold text-[17px] leading-[23px] tracking-[-0.5px] text-black">
+                {t('profile.dob')}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${t('profile.dob')}: ${dateOfBirth ? formatDate(dateOfBirth) : t('checkin.selectDate')}`}
+                className={`min-h-[48px] justify-center rounded-[7px] border px-2.5 py-2.5 ${submitted && validation.dateOfBirth ? 'border-[#B84747]' : 'border-[#D2CFD6]'}`}
+                onPress={openDatePicker}
+              >
+                <Text className={`font-inter-semibold text-[17px] leading-[23px] tracking-[-0.6px] ${dateOfBirth ? 'text-[#181027]' : 'text-[#807B89]'}`}>
+                  {dateOfBirth ? formatDate(dateOfBirth) : t('checkin.selectDate')}
                 </Text>
-
-                <Pressable
-                  accessibilityRole="button"
-                  className={`h-[58px] justify-center rounded-2xl border bg-[#F5F4F5] px-4 ${
-                    submitted && validation.dateOfBirth
-                      ? 'border-[#B84747]'
-                      : 'border-[#D9D6DC]'
-                  }`}
-                  onPress={openDatePicker}
-                >
-                  <Text
-                    className={`font-inter text-[17px] ${
-                      dateOfBirth ? 'text-[#181027]' : 'text-[#A19CA6]'
-                    }`}
-                  >
-                    {dateOfBirth ? formatDate(dateOfBirth) : t('checkin.selectDate')}
-                  </Text>
-                </Pressable>
-
-                {submitted && validation.dateOfBirth ? (
-                  <Text className="font-inter mt-2 text-[13px] text-[#B84747]">
-                    {validation.dateOfBirth}
-                  </Text>
-                ) : null}
-              </View>
-
+              </Pressable>
+              {submitted && validation.dateOfBirth ? <Text accessibilityLiveRegion="polite" className="mt-2 font-inter text-[13px] text-[#B84747]">{validation.dateOfBirth}</Text> : null}
               <ProfileField
+                appearance="beforeStart"
                 label={t('profile.height')}
                 value={height}
                 onChangeText={setHeight}
                 unit={units === 'metric' ? 'cm' : 'in'}
-                placeholder={units === 'metric' ? '170' : '67'}
+                placeholder={t('checkin.enterHeight')}
                 error={submitted ? validation.height : null}
               />
-
               <ProfileField
+                appearance="beforeStart"
                 label={t('profile.weight')}
                 value={weight}
                 onChangeText={setWeight}
                 unit={units === 'metric' ? 'kg' : 'lb'}
-                placeholder={units === 'metric' ? '65' : '143'}
+                placeholder={t('checkin.enterWeight')}
                 error={submitted ? validation.weight : null}
               />
+              <View className="mt-7">
+                <UnitSegmentedControl appearance="beforeStart" value={units} onChange={changeUnits} />
+              </View>
             </View>
 
             <View className="flex-1" />
-
+            <View className="mb-10 mt-10 flex-row items-center justify-center gap-2">
+              <PrivateIcon width={20} height={22} />
+              <Text className="shrink text-center font-inter-semibold text-[15px] leading-[21px] tracking-[-0.6px] text-[#8E879B]">
+                {t('checkin.informationPrivate')}
+              </Text>
+            </View>
             <Pressable
               accessibilityRole="button"
-              className={`mt-10 h-14 items-center justify-center rounded-2xl bg-[#181027] active:opacity-90 ${
-                submitted && !isValid ? 'opacity-50' : 'opacity-100'
-              }`}
+              className={`min-h-[60px] items-center justify-center rounded-[17px] bg-[#181027] px-4 py-3 active:opacity-90 ${submitted && !isValid ? 'opacity-50' : 'opacity-100'}`}
               onPress={handleContinue}
             >
-              <Text className="font-inter-medium text-[16px] text-[#ECECEC]">
+              <Text className="text-center font-inter text-[20px] leading-[27px] tracking-[-0.8px] text-[#ECECEC]">
                 {t('checkin.continue')}
               </Text>
             </Pressable>
@@ -233,7 +221,7 @@ export default function BeforeStartForm({ profile, onContinue }) {
             onPress={() => setDatePickerOpen(false)}
           />
 
-          <View className="rounded-t-[28px] bg-[#F5F4F5] px-5 pb-8 pt-4">
+          <View className="w-full max-w-[560px] self-center rounded-t-[28px] bg-[#F5F4F5] px-5 pt-4" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
             <View className="mb-2 flex-row items-center justify-between">
               <Pressable
                 className="h-11 justify-center px-2"

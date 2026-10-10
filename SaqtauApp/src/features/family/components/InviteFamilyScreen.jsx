@@ -1,7 +1,7 @@
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { ChevronLeft, Search, X } from 'lucide-react-native';
+import { ArrowLeft, Copy, Search, Share2, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,12 +12,14 @@ import {
   TextInput,
   View,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CopyIcon from '@/assets/images/copy.svg';
-import InviteFamilyPicture from '@/assets/images/invite_family_pic_1.png';
-import ShareIcon from '@/assets/images/share.svg';
+import QRCode from 'react-native-qrcode-svg';
+import InviteFamilyNavigation from '@/src/features/family/components/InviteFamilyNavigation';
+import InviteFamilyPicture from '@/assets/images/family-invite/hero.png';
 import {
   createDirectInvite,
   createInviteLink,
@@ -42,6 +44,25 @@ function inviteUrlFromResponse(invite) {
   }
 
   return '';
+}
+
+function InvitationQr({ value, t }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <View
+      accessibilityLabel={failed ? t('family.qrUnavailable') : t('family.qrLabel')}
+      className="mt-3 items-center justify-center self-center rounded-[13px] bg-white p-3"
+      style={{ minWidth: 168, minHeight: 168, boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.18)' }}
+    >
+      {failed ? (
+        <Text className="max-w-[160px] text-center font-inter-medium text-[13px] leading-[19px] text-[#807B89]">
+          {t('family.qrUnavailable')}
+        </Text>
+      ) : (
+        <QRCode value={value} size={144} quietZone={8} color="#181027" backgroundColor="white" ecl="M" onError={() => setFailed(true)} />
+      )}
+    </View>
+  );
 }
 
 export default function InviteFamilyScreen() {
@@ -137,84 +158,101 @@ export default function InviteFamilyScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
-        <View className="flex-row items-center px-5 pt-2">
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-            className="h-11 w-11 items-center justify-center rounded-full bg-white active:opacity-80"
-          >
-            <ChevronLeft size={23} color="#181027" />
-          </Pressable>
-          <Text className="ml-4 font-inter-extrabold text-[25px] tracking-[-0.7px] text-[#181027]">
-            {t('family.inviteTitle')}
-          </Text>
-        </View>
-
-        <View className="items-center px-6 pt-8">
-          <Image
-            source={InviteFamilyPicture}
-            resizeMode="contain"
-            className="h-[220px] w-full max-w-[330px]"
-          />
-          <Text className="mt-2 text-center font-inter-extrabold text-[27px] tracking-[-0.8px] text-[#181027]">
-            {t('family.inviteHeroTitle')}
-          </Text>
-          <Text className="mt-3 max-w-[340px] text-center font-inter-medium text-[15px] leading-[22px] text-[#807B89]">
-            {t('family.inviteHeroBody')}
-          </Text>
-        </View>
-
-        <View className="mt-7 px-5">
-          {!invite && !legacyMode ? (
-            <Pressable
-              disabled={creating}
-              onPress={createLink}
-              className="h-14 items-center justify-center rounded-full bg-[#181027] active:opacity-80"
-            >
-              {creating ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="font-inter-bold text-[16px] text-white">{t('family.createLink')}</Text>
-              )}
-            </Pressable>
-          ) : null}
-
-          {invite ? (
-            <View className="rounded-[28px] bg-white p-5">
-              <Text className="font-inter-bold text-[17px] text-[#181027]">{t('family.yourInviteLink')}</Text>
-              <View className="mt-3 rounded-[18px] bg-[#F2F1F3] px-4 py-3">
-                <Text selectable className="font-inter-medium text-[13px] leading-[19px] text-[#625D71]">
-                  {inviteUrl}
-                </Text>
-              </View>
-
-              <View className="mt-4 flex-row gap-3">
-                <Pressable
-                  disabled={!inviteUrl}
-                  onPress={copyLink}
-                  className={`h-12 flex-1 flex-row items-center justify-center rounded-full bg-[#EEECEF] active:opacity-80 ${!inviteUrl ? 'opacity-50' : ''}`}
-                >
-                  <CopyIcon width={20} height={20} />
-                  <Text className="ml-2 font-inter-semibold text-[14px] text-[#181027]">{t('family.copyLink')}</Text>
-                </Pressable>
-                <Pressable
-                  disabled={!inviteUrl}
-                  onPress={shareLink}
-                  className={`h-12 flex-1 flex-row items-center justify-center rounded-full bg-[#181027] active:opacity-80 ${!inviteUrl ? 'opacity-50' : ''}`}
-                >
-                  <ShareIcon width={20} height={20} />
-                  <Text className="ml-2 font-inter-semibold text-[14px] text-white">{t('family.shareLink')}</Text>
-                </Pressable>
-              </View>
-
-              <Text className="mt-4 text-center font-inter-medium text-[12px] leading-[18px] text-[#9A96A2]">
-                {t('family.inviteExpires')}
+    <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom', 'left', 'right']}>
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+            <View className="mt-5 flex-row items-center px-1">
+              <Pressable
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.back')}
+                className="h-11 w-11 items-center justify-center active:opacity-60"
+              >
+                <ArrowLeft size={30} strokeWidth={2.3} color="#181027" />
+              </Pressable>
+              <Text accessibilityRole="header" className="flex-1 text-center font-inter-bold text-[27px] leading-[34px] tracking-[-0.7px] text-[#181027]">
+                {t('family.inviteTitle')}
               </Text>
+              <View className="w-11" />
             </View>
-          ) : null}
+            <Text className="mt-3 max-w-[330px] self-center px-3 text-center font-inter-medium text-[14px] leading-[20px] text-[#807B89]">
+              {t('family.designInviteBody')}
+            </Text>
+
+            <Image
+              source={InviteFamilyPicture}
+              resizeMode="contain"
+              accessible={false}
+              style={{ width: '100%', marginTop:20,height:207 }}
+            />
+
+            {!legacyMode ? (
+              <View className="rounded-[20px] bg-[#F7F7F8] px-5 pb-4 pt-4" style={{ boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.16)' }}>
+                <Text accessibilityRole="header" className="text-center font-inter-semibold text-[17px] leading-[23px] tracking-[-0.3px] text-[#181027]">
+                  {t('family.shareInvitation')}
+                </Text>
+                <Text className="mt-1.5 text-center font-inter-medium text-[14px] leading-[20px] text-[#807B89]">
+                  {t('family.scanOrLink')}
+                </Text>
+
+                {!invite ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('family.createLink')}
+                    disabled={creating}
+                    onPress={createLink}
+                    className="mt-5 min-h-[52px] items-center justify-center rounded-full bg-[#181027] px-4 py-3 active:opacity-70 disabled:opacity-60"
+                  >
+                    {creating ? <ActivityIndicator color="white" /> : <Text className="text-center font-inter-semibold text-[15px] text-white">{t('family.createLink')}</Text>}
+                  </Pressable>
+                ) : null}
+
+                {invite ? (
+                  <>
+                    {inviteUrl ? <InvitationQr key={inviteUrl} value={inviteUrl} t={t} /> : null}
+                    <Text className="mt-3 text-center font-inter-medium text-[13px] leading-[19px] text-[#807B89]">
+                      {t('family.yourInviteLink')}
+                    </Text>
+                    <Text selectable className="mt-1 text-center font-inter-medium text-[11px] leading-[16px] text-[#807B89]">
+                      {inviteUrl || t('family.noShareUrl')}
+                    </Text>
+                    <View className="mt-4 flex-row gap-3">
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('family.copyLink')}
+                        disabled={!inviteUrl}
+                        onPress={copyLink}
+                        className="min-h-[46px] flex-1 flex-row items-center justify-center gap-2 rounded-full bg-[#F7F7F8] px-2 py-3 active:opacity-65 disabled:opacity-50"
+                        style={{ boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.18)' }}
+                      >
+                        <Copy size={20} color="#807B89" />
+                        <Text className="shrink text-center font-inter-semibold text-[14px] leading-[19px] text-[#807B89]">{t('family.copyLink')}</Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('family.shareLink')}
+                        disabled={!inviteUrl}
+                        onPress={shareLink}
+                        className="min-h-[46px] flex-1 flex-row items-center justify-center gap-2 rounded-full bg-[#F7F7F8] px-2 py-3 active:opacity-65 disabled:opacity-50"
+                        style={{ boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.18)' }}
+                      >
+                        <Share2 size={20} color="#807B89" />
+                        <Text className="shrink text-center font-inter-semibold text-[14px] leading-[19px] text-[#807B89]">{t('family.shareLink')}</Text>
+                      </Pressable>
+                    </View>
+                    <Text className="mt-4 text-center font-inter-medium text-[11px] leading-[16px] text-[#9A96A2]">
+                      {t('family.inviteExpires')}
+                    </Text>
+                  </>
+                ) : null}
+              </View>
+            ) : null}
 
           {message ? (
             <View className="mt-4 flex-row items-start rounded-[18px] bg-white px-4 py-3">
@@ -281,8 +319,10 @@ export default function InviteFamilyScreen() {
               ))}
             </View>
           ) : null}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <InviteFamilyNavigation disabled={creating || searching || Boolean(sendingId)} />
     </SafeAreaView>
   );
 }

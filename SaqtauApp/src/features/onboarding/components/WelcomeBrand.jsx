@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Logo from '@/assets/images/Logo.svg';
+import Logo from '@/assets/images/Logo2.svg';
 import { useOnboardingStore } from '@/src/features/onboarding/onboarding.store';
 
 export default function WelcomeScreen() {
@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
     >
       <View className="flex-1 px-6">
         <View className="flex-1 items-center justify-center">
-          <Logo width={150} height={48} />
+          <Logo width={250} height={96} />
 
           <Text className="font-inter-extrabold mt-24 max-w-[320px] text-center text-[34px] leading-[40px] tracking-[-1.3px] text-[#181027]">
             {t('onboarding.welcomeTitle')}
