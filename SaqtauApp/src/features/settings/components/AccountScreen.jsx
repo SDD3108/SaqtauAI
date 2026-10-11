@@ -1,3 +1,4 @@
+import { exportMeasurementReport } from '@/src/features/settings/export/exportReport';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -8,13 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Share,
   Pressable,
   Text,
   TextInput,
   View,
 } from 'react-native';
-
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/src/features/auth/auth.store';
@@ -24,7 +23,6 @@ import {
   logoutCurrentSession,
 } from '@/src/features/settings/settings.api';
 import { detachNotificationDevice } from '@/src/services/notifications/push';
-
 // Screen-specific layout keeps the other settings screens unchanged.
 function AccountPage({ title, children, backDisabled = false }) {
   const { t } = useI18n();
@@ -59,7 +57,6 @@ function AccountPage({ title, children, backDisabled = false }) {
     </SafeAreaView>
   );
 }
-
 function AccountRow({ title, subtitle, onPress, disabled = false, loading = false, accessibilityLabel }) {
   const Wrapper = onPress ? Pressable : View;
   return (
@@ -83,16 +80,14 @@ function AccountRow({ title, subtitle, onPress, disabled = false, loading = fals
     </Wrapper>
   );
 }
-
 export default function AccountScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const insets = useSafeAreaInsets();
   const account = useAuthStore((state) => state.account);
   const isGuest = useAuthStore((state) => state.isGuest);
   const token = useAuthStore((state) => state.token);
   const clearSession = useAuthStore((state) => state.clearSession);
   const createGuest = useAuthStore((state) => state.createGuest);
-
   const [busy, setBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -100,7 +95,6 @@ export default function AccountScreen() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
   const actionBusy = busy || exporting;
-
   if (isGuest) {
     return (
       <AccountPage title={t('account.title')}>
@@ -119,7 +113,6 @@ export default function AccountScreen() {
       </AccountPage>
     );
   }
-
   async function becomeFreshGuest({ detach = true } = {}) {
     if (detach && token) {
       try {
@@ -128,15 +121,12 @@ export default function AccountScreen() {
         // Signing out locally must still work if the network is unavailable.
       }
     }
-
     await clearSession({ detachDevice: false });
     await createGuest();
     router.replace('/(app)/(tabs)');
   }
-
   async function handleSignOut() {
     if (busy) return;
-
     setBusy(true);
     try {
       if (token) {
@@ -146,13 +136,11 @@ export default function AccountScreen() {
           // Best effort. A future push registration re-binds the device token.
         }
       }
-
       try {
         await logoutCurrentSession();
       } catch {
         // Offline logout still clears the local credential.
       }
-
       await clearSession({ detachDevice: false });
       await createGuest();
       router.replace('/(app)/(tabs)');
@@ -160,13 +148,10 @@ export default function AccountScreen() {
       setBusy(false);
     }
   }
-
   async function handleDeleteAccount() {
     if (busy) return;
-
     setDeleteError('');
     setBusy(true);
-
     try {
       await deleteAccount(password);
       setDeleteOpen(false);
@@ -178,7 +163,6 @@ export default function AccountScreen() {
       setBusy(false);
     }
   }
-
   async function handleExport() {
     if (actionBusy) return;
     setExporting(true);
@@ -186,14 +170,13 @@ export default function AccountScreen() {
     try {
       // Reuse the same account export API and share format as PrivacyDataScreen.
       const data = await exportAccountData();
-      await Share.share({ title: t('privacy.exportTitle'), message: JSON.stringify(data, null, 2) });
+      await exportMeasurementReport(data, { language });
     } catch (error) {
       setExportError(error?.message || t('privacy.exportError'));
     } finally {
       setExporting(false);
     }
   }
-
   return (
     <>
       <AccountPage title={t('account.title')} backDisabled={actionBusy}>
@@ -214,7 +197,6 @@ export default function AccountScreen() {
             onPress={() => router.push('/(app)/settings/change-password')}
           />
         </View>
-
         <Text accessibilityRole="header" className="mb-5 mt-8 px-2 font-inter-semibold text-[17px] leading-[24px] tracking-[-0.25px] text-[#302C3B]">
           {t('account.actions')}
         </Text>
@@ -248,7 +230,6 @@ export default function AccountScreen() {
             {exportError}
           </Text>
         ) : null}
-
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${t('account.delete')}. ${t('account.deleteWarning')}`}
@@ -270,7 +251,6 @@ export default function AccountScreen() {
           <ChevronRight size={21} strokeWidth={2.2} color="#8E879B" />
         </Pressable>
       </AccountPage>
-
       <Modal
         visible={deleteOpen}
         transparent

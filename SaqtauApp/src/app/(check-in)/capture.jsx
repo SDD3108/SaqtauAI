@@ -22,12 +22,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import useMotionStability from '@/src/features/check-in/hooks/useMotionStability';
 import { useCheckInStore } from '@/src/features/check-in/check-in.store';
+import CaptureProgress, { CaptureGuide } from '@/src/features/check-in/components/CaptureProgress';
 
 const RECORDING_SECONDS = 60;
 const MIN_VALID_SECONDS = 50;
 
 function formatSeconds(value) {
-  return `0:${String(value).padStart(2, '0')}`;
+  return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;
 }
 
 export default function CaptureScreen() {
@@ -231,7 +232,7 @@ export default function CaptureScreen() {
             </Pressable>
 
             <View className="rounded-full bg-black/35 px-4 py-2">
-              <Text className="font-inter-semibold text-[14px] text-white">
+              <Text className="font-inter-semibold text-[14px] tabular-nums text-white">
                 {recording
                   ? formatSeconds(secondsLeft)
                   : t('checkin.sixtySec')}
@@ -239,8 +240,8 @@ export default function CaptureScreen() {
             </View>
           </View>
 
-          <View className="flex-1 items-center justify-center">
-            <View className="h-[390px] w-[270px] rounded-[140px] border-2 border-white/90" />
+          <View className="flex-1 items-center justify-center py-4">
+            <CaptureGuide recording={recording} secondsLeft={secondsLeft} duration={RECORDING_SECONDS} />
 
             <View
               className={`mt-5 flex-row items-center rounded-full px-4 py-2 ${
@@ -271,9 +272,9 @@ export default function CaptureScreen() {
                   : t('checkin.readyCapture')}
               </Text>
 
-              <Text className="mt-2 text-center font-inter text-[14px] leading-[20px] text-white/75">
+              {!recording ? <Text className="mt-2 text-center font-inter text-[14px] leading-[20px] text-white/75">
                 {t('checkin.captureInstructions')}
-              </Text>
+              </Text> : null}
 
               {error ? (
                 <Text className="mt-3 text-center font-inter-medium text-[13px] leading-[18px] text-[#FFD1D1]">
@@ -302,11 +303,7 @@ export default function CaptureScreen() {
                   </Text>
                 </Pressable>
               ) : (
-                <View className="mt-5 h-[58px] items-center justify-center rounded-[16px] bg-white/15">
-                  <Text className="font-inter-semibold text-[16px] text-white">
-                    {t('checkin.recording')}
-                  </Text>
-                </View>
+              <CaptureProgress secondsLeft={secondsLeft} duration={RECORDING_SECONDS} />
               )}
             </View>
           </View>

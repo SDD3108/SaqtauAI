@@ -1,14 +1,13 @@
+import { exportMeasurementReport } from '@/src/features/settings/export/exportReport';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Share,
   Switch,
   Text,
   View,
 } from 'react-native';
-
 import DataStaysDeviceIcon from '@/assets/images/data_stays_device.svg';
 import ManageIcon from '@/assets/images/manage.svg';
 import TrashIcon from '@/assets/images/trash.svg';
@@ -30,7 +29,6 @@ import {
   getLocalPrivacyPreferences,
   saveLocalPrivacyPreferences,
 } from '@/src/features/settings/settings.storage';
-
 function PrivacySwitch({ value, disabled, onValueChange, label }) {
   return (
     <Switch
@@ -46,26 +44,21 @@ function PrivacySwitch({ value, disabled, onValueChange, label }) {
     />
   );
 }
-
 export default function PrivacyDataScreen() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const isGuest = useAuthStore((state) => state.isGuest);
   const account = useAuthStore((state) => state.account);
   const replaceAccount = useAuthStore((state) => state.replaceAccount);
-
   const [preferences, setPreferences] = useState(DEFAULT_PRIVACY_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState('');
   const [actionBusy, setActionBusy] = useState('');
   const [message, setMessage] = useState('');
-
   useEffect(() => {
     let active = true;
-
     (async () => {
       const local = await getLocalPrivacyPreferences();
       if (!active) return;
-
       setPreferences({
         share_usage_data:
           account?.settings_data?.share_usage_data ?? local.share_usage_data,
@@ -74,22 +67,18 @@ export default function PrivacyDataScreen() {
       });
       setLoading(false);
     })();
-
     return () => {
       active = false;
     };
   }, [account?.id, account?.settings_data?.share_insights, account?.settings_data?.share_usage_data]);
-
   async function updatePreference(key, value) {
     const previous = preferences;
     const next = { ...preferences, [key]: value };
     setPreferences(next);
     setSavingKey(key);
     setMessage('');
-
     try {
       await saveLocalPrivacyPreferences(next);
-
       if (!isGuest) {
         const updated = await updateCurrentAccount({
           settings_data: {
@@ -107,19 +96,12 @@ export default function PrivacyDataScreen() {
       setSavingKey('');
     }
   }
-
   async function handleExport() {
     setActionBusy('export');
     setMessage('');
-
     try {
       const data = isGuest ? await buildGuestDataExport() : await exportAccountData();
-      const json = JSON.stringify(data, null, 2);
-
-      await Share.share({
-        title: t('privacy.exportTitle'),
-        message: json,
-      });
+      await exportMeasurementReport(data, { language });
     }
     catch(error) {
       setMessage(error?.message || t('privacy.exportError'));
@@ -128,18 +110,14 @@ export default function PrivacyDataScreen() {
       setActionBusy('');
     }
   }
-
   async function performDeleteData() {
     setActionBusy('delete');
     setMessage('');
-
     try {
       if (!isGuest) {
         await deleteAccountData();
       }
-
       await clearLocalMeasurementData(account?.id);
-
       if (isGuest) {
         await clearGuestProfileData();
         useOnboardingStore.setState({
@@ -155,7 +133,6 @@ export default function PrivacyDataScreen() {
       } else {
         useOnboardingStore.setState({ firstCheckInCompleted: false });
       }
-
       setMessage(t('privacy.deleted'));
     } catch (error) {
       setMessage(error?.message || t('privacy.deleteError'));
@@ -163,7 +140,6 @@ export default function PrivacyDataScreen() {
       setActionBusy('');
     }
   }
-
   if (loading) {
     return (
       <SettingsPage title={t('privacy.title')} subtitle={t('privacy.subtitle')}>
@@ -173,7 +149,6 @@ export default function PrivacyDataScreen() {
       </SettingsPage>
     );
   }
-
   return (
     <SettingsPage
       title={t('privacy.title')}
@@ -219,7 +194,6 @@ export default function PrivacyDataScreen() {
           showChevron={false}
         />
       </View>
-
       <Text accessibilityRole="header" className="mb-2 ml-1 font-inter-semibold text-[16px] text-[#181027]">
         {t('privacy.controls')}
       </Text>
@@ -263,13 +237,11 @@ export default function PrivacyDataScreen() {
           }
         />
       </View>
-
       <View className="mt-5 rounded-[18px] bg-white px-4 py-4">
         <Text className="font-inter-medium text-[12px] leading-[18px] text-[#918B9D]">
           {t('privacy.switchNote')}
         </Text>
       </View>
-
       {message ? (
         <Text accessibilityLiveRegion="polite" className="mt-4 text-center font-inter-medium text-[13px] leading-[18px] text-[#696477]">
           {message}

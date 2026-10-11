@@ -24,11 +24,10 @@ export default function WelcomeScreen() {
         <View className="flex-1 items-center justify-center">
           <Logo width={250} height={96} />
 
-          <Text className="font-inter-extrabold mt-24 max-w-[320px] text-center text-[34px] leading-[40px] tracking-[-1.3px] text-[#181027]">
+          <Text className="font-inter-extrabold mt-28 max-w-[320px] text-center text-[40px] leading-[40px] tracking-[-1.3px] text-[#181027]">
             {t('onboarding.welcomeTitle')}
           </Text>
-
-          <Text className="font-inter-medium mt-8 max-w-[300px] text-center text-[18px] leading-6 text-[#807B89]">
+          <Text className="font-inter-medium mt-4 max-w-[300px] text-center text-[24px] leading-8 text-[#807B89]">
             {t('onboarding.welcomeSubtitle')}
           </Text>
         </View>
