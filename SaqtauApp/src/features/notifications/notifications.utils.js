@@ -15,6 +15,7 @@ function familyInviteToken(notification) {
 
 export function getNotificationDestination(notification) {
   const kind = getNotificationKind(notification);
+  if (kind === 'measurement_ready' || kind === 'checkin_ready' || kind === 'check_in_ready') return '/(check-in)/result';
   if (kind.includes('result') || kind.includes('measurement')) return '/(app)/(tabs)/history';
   if (kind.includes('family') || kind.includes('invite')) {
     const token = familyInviteToken(notification);

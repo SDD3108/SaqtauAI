@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 
 import { useAuthStore } from '@/src/features/auth/auth.store';
 import { useNotificationsStore } from '@/src/features/notifications/notifications.store';
-import { getNotificationDestination } from '@/src/features/notifications/notifications.utils';
+import { getNotificationDestination, getNotificationKind } from '@/src/features/notifications/notifications.utils';
+import { saveLastMeasurementId } from '@/src/features/check-in/check-in.storage';
+import { useCheckInStore } from '@/src/features/check-in/check-in.store';
 import {
   notificationModuleAvailable,
   registerForPushNotifications,
@@ -36,6 +38,14 @@ async function openResponse(response) {
   if (!response) return;
 
   const notification = normalizeResponse(response);
+  const kind = getNotificationKind(notification);
+  const measurementId = notification.data?.measurement_id;
+  if ((kind === 'measurement_ready' || kind === 'checkin_ready' || kind === 'check_in_ready') && measurementId) {
+    // A notification can be opened after the app was terminated. Hydrate the
+    // exact completed measurement before entering the result screen.
+    await saveLastMeasurementId(String(measurementId));
+    useCheckInStore.setState({ measurement: null, measurementId: String(measurementId) });
+  }
   const destination = getNotificationDestination(notification);
   router.push(destination || '/(app)/notifications');
 
@@ -58,7 +68,6 @@ export default function NotificationRuntime() {
 
     let receiveSubscription;
     let responseSubscription;
-    let pushTokenSubscription;
     let active = true;
 
     if (typeof Notifications.addNotificationReceivedListener === 'function') {
@@ -73,11 +82,9 @@ export default function NotificationRuntime() {
       });
     }
 
-    if (typeof Notifications.addPushTokenListener === 'function') {
-      pushTokenSubscription = Notifications.addPushTokenListener(() => {
-        registerForPushNotifications({ requestPermission: false }).catch(() => {});
-      });
-    }
+    // Intentionally no addPushTokenListener -> getExpoPushTokenAsync cycle.
+    // Expo's native token registration can itself fire that listener. Register
+    // once when the authentication session starts (and on the next app launch).
 
     if (typeof Notifications.getLastNotificationResponseAsync === 'function') {
       Notifications.getLastNotificationResponseAsync()
@@ -92,7 +99,6 @@ export default function NotificationRuntime() {
       active = false;
       receiveSubscription?.remove?.();
       responseSubscription?.remove?.();
-      pushTokenSubscription?.remove?.();
     };
   }, [incrementUnread]);
 

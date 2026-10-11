@@ -154,7 +154,11 @@ export default function useNotificationPreferences() {
         return;
       }
 
-      await syncPushRegistration();
+      const result = await syncPushRegistration();
+      if (!result.ok) {
+        setPushMessage(result.message || 'Could not register push notifications.');
+        return;
+      }
 
       setPushMessage('Push notifications enabled.');
 

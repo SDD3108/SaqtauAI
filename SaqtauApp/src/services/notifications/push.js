@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import {
   registerPushToken,
@@ -16,7 +16,8 @@ import {
   localDateKey,
   notificationType,
 } from '@/src/features/notifications/notifications.utils';
-import { ApiError } from '@/src/services/api/client';
+import { ApiError, getApiToken } from '@/src/services/api/client';
+import { createPushRegistrationGate } from '@/src/services/notifications/pushRegistrationGate';
 import {
   getJSON,
   removeStorageItem,
@@ -26,6 +27,7 @@ import {
 const SCHEDULE_ID = 'saqtau.checkin.daily';
 const PUSH_BINDING_KEY = 'saqtau.notifications.pushBinding';
 let registering = Promise.resolve();
+const pushRegistrationGate = createPushRegistrationGate();
 
 function hasNotificationsNativeModule() {
   return Boolean(
@@ -133,7 +135,7 @@ export function openNotificationSettings() {
   return Linking.openSettings();
 }
 
-export async function registerForPushNotifications({ requestPermission = false } = {}) {
+async function performPushRegistration({ requestPermission = false } = {}) {
   if (!Device.isDevice) {
     return {
       ok: false,
@@ -191,15 +193,74 @@ export async function registerForPushNotifications({ requestPermission = false }
   };
 }
 
-export function syncPushRegistration() {
-  const job = registering.then(() =>
-    registerForPushNotifications({ requestPermission: false }),
+export function registerForPushNotifications({ requestPermission = false, force = false } = {}) {
+  // The API uses this bearer session to associate the device with the correct account.
+  // Automatic registrations are single-flight and do not hammer a failing backend.
+  const job = pushRegistrationGate.run(
+    getApiToken(),
+    () => performPushRegistration({ requestPermission }),
+    { force },
   );
   registering = job.catch(() => {});
   return job;
 }
 
+// True only after the server accepted the Expo token for the current session.
+export async function isPushRegisteredOnThisDevice() {
+  const binding = await getJSON(PUSH_BINDING_KEY);
+  return Boolean(binding?.expoToken);
+}
+
+const remoteReadyIds = new Set();
+const localReadyIds = new Set();
+
+export function noteRemoteMeasurementNotification(measurementId) {
+  if (measurementId !== null && measurementId !== undefined) {
+    remoteReadyIds.add(String(measurementId));
+  }
+}
+
+/**
+ * OPTIONAL local fallback for guest check-ins while JS is active.
+ * Authenticated check-ins must be notified by the backend through APNs/Expo.
+ * There is no reliable client-only push when iOS suspends or terminates JS.
+ */
+export async function notifyMeasurementReady(measurement, { accountId, isCurrent } = {}) {
+  if (!measurement?.id || measurement.status !== 'completed') return { status: 'skipped' };
+  const id = String(measurement.id);
+  if (accountId !== 'guest' || AppState.currentState !== 'active') return { status: 'remote_required' };
+  if (isCurrent && !isCurrent()) return { status: 'session_changed' };
+  if (remoteReadyIds.has(id) || localReadyIds.has(id)) return { status: 'already_notified' };
+  const permission = await getPushPermissionStatus();
+  if (!permission.granted) return { status: 'permission_missing' };
+  const preferences = await getLocalNotificationPreferences();
+  if (!preferences.report_ready) return { status: 'disabled_in_settings' };
+  if (typeof Notifications.scheduleNotificationAsync !== 'function') return nativeBuildRequiredResult();
+  localReadyIds.add(id);
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'SaqtauAI',
+        body: 'Your check-in result is ready.',
+        data: { type: 'measurement_ready', measurement_id: id, saqtau_checkin_ready: true },
+        sound: 'default',
+      },
+      trigger: null,
+    });
+    return { status: 'local_delivered' };
+  } catch (error) {
+    localReadyIds.delete(id);
+    throw error;
+  }
+}
+
+export function syncPushRegistration() {
+  // Called after a deliberate user action; allow retry even during cooldown.
+  return registerForPushNotifications({ requestPermission: false, force: true });
+}
+
 export async function invalidatePushBinding() {
+  pushRegistrationGate.reset();
   await removeStorageItem(PUSH_BINDING_KEY);
   return syncPushRegistration();
 }
@@ -331,6 +392,7 @@ export function nativeNotificationItem(notification, session) {
 
 export async function detachNotificationDevice(authToken, accountId) {
   await registering.catch(() => {});
+  pushRegistrationGate.reset();
   const binding = await getJSON(PUSH_BINDING_KEY);
 
   if (binding?.expoToken) {

@@ -78,10 +78,11 @@ export async function apiRequest(
 
     return data;
   } catch (error) {
-    console.log('[API REQUEST]', {
+    console.warn('[API ERROR]', {
+      method,
       url: `${API_URL}${path}`,
-      auth,
-      hasAccessToken: Boolean(accessToken),
+      status: error instanceof ApiError ? error.status : null,
+      message: error?.message || 'Unknown request error',
     });
     if (error instanceof ApiError) {
       throw error;
