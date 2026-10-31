@@ -26,7 +26,7 @@ export default function LanguageSettingsScreen() {
     <SettingsPage title={t('language.title')} subtitle={t('language.subtitle')}>
       <View className="overflow-hidden rounded-[24px] bg-[#F7F7F8] px-2 py-1">
         {LANGUAGE_OPTIONS.map((option, index) => {
-          const selected = language === option.value;
+          const selected = language == option.value;
           const label = t(option.labelKey);
 
           return (
@@ -39,11 +39,7 @@ export default function LanguageSettingsScreen() {
                 onPress={() => choose(option.value)}
                 className="min-h-[72px] flex-row items-center gap-4 px-2 py-3 active:opacity-70"
               >
-                <View
-                  className={`h-11 w-11 items-center justify-center rounded-[14px] ${
-                    selected ? 'bg-[#181027]' : 'bg-[#ECEAEC]'
-                  }`}
-                >
+                <View className={`h-11 w-11 items-center justify-center rounded-[14px] ${selected ? 'bg-[#181027]' : 'bg-[#ECEAEC]'}`}>
                   <Languages size={22} color={selected ? '#FFFFFF' : '#625D71'} />
                 </View>
 
