@@ -1,3 +1,4 @@
+import { CHECK_IN_SECONDS } from '@/src/features/check-in/utils/duration';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -16,7 +17,7 @@ const BLUE = '#83C9FF';
 const PERIMETER = 2 * (264 + 384 - 4 * 132) + 2 * Math.PI * 132;
 
 // This outline shows elapsed recording time, not measured signal quality.
-export function CaptureGuide({ recording, secondsLeft, duration = 60 }) {
+export function CaptureGuide({ recording, secondsLeft, duration = CHECK_IN_SECONDS }) {
   const { ratio } = captureProgress(secondsLeft, duration);
   return (
     <View
@@ -62,7 +63,7 @@ function useReducedMotion() {
   return reduced;
 }
 
-export default function CaptureProgress({ secondsLeft, duration = 60 }) {
+export default function CaptureProgress({ secondsLeft, duration = CHECK_IN_SECONDS }) {
   const { language } = useI18n();
   const copy = captureCopy(language);
   const { ratio, stage, finishing } = captureProgress(secondsLeft, duration);

@@ -1,5 +1,7 @@
-export function captureProgress(secondsLeft, duration = 60) {
-  const total = Number.isFinite(duration) && duration > 0 ? duration : 60;
+import { CHECK_IN_SECONDS } from './duration';
+
+export function captureProgress(secondsLeft, duration = CHECK_IN_SECONDS) {
+  const total = Number.isFinite(duration) && duration > 0 ? duration : CHECK_IN_SECONDS;
   const remaining = Number.isFinite(secondsLeft)
     ? Math.max(0, Math.min(total, secondsLeft))
     : total;
@@ -20,7 +22,7 @@ const messages = {
     finishing: 'Завершаем запись…',
     finishingBody: 'Ещё немного. Продолжайте держать телефон неподвижно.',
     stages: [
-      ['Минута для себя', 'Устройтесь удобно. Держите лицо в рамке.'],
+      ['20 секунд для себя', 'Устройтесь удобно. Держите лицо в рамке.'],
       ['Четверть уже позади', 'Дышите как обычно. Сохраняйте привычный темп.'],
       ['Половина позади', 'Всё идёт своим чередом. Сохраняйте неподвижность.'],
       ['Осталось совсем немного', 'Продолжайте смотреть в камеру. Скоро закончим.'],
@@ -33,7 +35,7 @@ const messages = {
     finishing: 'Finishing the recording…',
     finishingBody: 'Just a moment. Keep holding your phone still.',
     stages: [
-      ['A minute for yourself', 'Get comfortable. Keep your face inside the frame.'],
+      ['20 seconds for yourself', 'Get comfortable. Keep your face inside the frame.'],
       ['A quarter of the way', 'Breathe as you normally do. Keep your usual rhythm.'],
       ['Halfway there', 'Take your time. Keep holding still.'],
       ['Almost there', 'Keep looking at the camera. We will finish soon.'],
@@ -46,7 +48,7 @@ const messages = {
     finishing: 'Жазу аяқталып жатыр…',
     finishingBody: 'Сәл күте тұрыңыз. Телефонды қозғалтпай ұстаңыз.',
     stages: [
-      ['Өзіңізге арналған бір минут', 'Ыңғайлы отырыңыз. Бетіңізді жақтау ішінде ұстаңыз.'],
+      ['Өзіңізге арналған 20 секунд', 'Ыңғайлы отырыңыз. Бетіңізді жақтау ішінде ұстаңыз.'],
       ['Уақыттың төрттен бірі өтті', 'Әдеттегідей тыныс алыңыз. Тыныс алу ырғағын өзгертпеңіз.'],
       ['Уақыттың жартысы өтті', 'Асықпаңыз. Қозғалмай отыра беріңіз.'],
       ['Аз ғана уақыт қалды', 'Камераға қарап отырыңыз. Жақында аяқтаймыз.'],

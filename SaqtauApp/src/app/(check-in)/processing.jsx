@@ -29,7 +29,7 @@ async function deleteLocalVideo(uri) {
     catch {
         // A camera cache file can already be gone. That should not
         // invalidate a server-side measurement that was accepted.
-        console.log("error '@/src/app/(check-in)/processing.jsx'");
+        console.log("error, '@/src/app/(check-in)/processing.jsx'");
     }
 }
 export default function ProcessingScreen() {

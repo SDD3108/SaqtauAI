@@ -1,3 +1,4 @@
+import { formatRecordedDuration } from '@/src/features/check-in/utils/duration';
 import { getCurrentLocale, tNow } from '@/src/features/localization/localization.store';
 
 function toNumber(value) {
@@ -84,13 +85,5 @@ export function formatLastCheckIn(measurement) {
 }
 
 export function formatCheckInDuration(measurement) {
-  const seconds = toNumber(measurement?.duration_seconds);
-  if (seconds === null || seconds <= 0) {
-    return measurement ? tNow('dashboard.oneMinuteCheckIn') : '—';
-  }
-
-  const minutes = Math.max(1, Math.round(seconds / 60));
-  return minutes === 1
-    ? tNow('dashboard.oneMinuteCheckIn')
-    : tNow('dashboard.minutesCheckIn', { count: minutes });
+  return formatRecordedDuration(measurement, tNow) || '—';
 }

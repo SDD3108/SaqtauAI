@@ -5,14 +5,16 @@ export default function MetricCard({
   value,
   unit,
   helper,
+  explanation,
+  fullWidth = false,
 }) {
   return (
-    <View className="w-[48.5%] rounded-[20px] bg-white px-4 py-4">
+    <View className={`${fullWidth ? 'w-full' : 'w-[48.5%]'} rounded-[20px] bg-white px-4 py-4`}>
       <Text className="font-inter-medium text-[13px] text-[#807B89]">
         {label}
       </Text>
 
-      <View className="mt-2 flex-row items-end">
+      <View className="mt-2 flex-row flex-wrap items-end">
         <Text className="font-inter-bold text-[28px] leading-[33px] tracking-[-0.6px] text-[#181027]">
           {value}
         </Text>
@@ -25,8 +27,13 @@ export default function MetricCard({
       </View>
 
       {helper ? (
-        <Text className="mt-2 font-inter text-[11px] leading-[15px] text-[#A09AA8]">
+        <Text className="mt-2 font-inter text-[12px] leading-[18px] text-[#807B89]">
           {helper}
+        </Text>
+      ) : null}
+      {explanation ? (
+        <Text className="mt-3 font-inter text-[10px] leading-[19px] text-[#696372]">
+          {explanation}
         </Text>
       ) : null}
     </View>

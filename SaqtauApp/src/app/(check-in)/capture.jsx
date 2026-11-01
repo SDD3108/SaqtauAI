@@ -24,8 +24,8 @@ import useMotionStability from '@/src/features/check-in/hooks/useMotionStability
 import { useCheckInStore } from '@/src/features/check-in/check-in.store';
 import CaptureProgress, { CaptureGuide } from '@/src/features/check-in/components/CaptureProgress';
 
-const RECORDING_SECONDS = 60;
-const MIN_VALID_SECONDS = 50;
+const RECORDING_SECONDS = 20;
+const MIN_VALID_SECONDS = 20;
 
 function formatSeconds(value) {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, '0')}`;

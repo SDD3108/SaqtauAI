@@ -11,12 +11,14 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getMeasurement } from '@/src/features/check-in/check-in.api';
 import MetricCard from '@/src/features/check-in/components/MetricCard';
+import ResultDescriptionCard from '@/src/features/check-in/result-insights/ResultDescriptionCard';
 import {
   getLastMeasurementId,
   getLocalGuestCheckIn,
@@ -67,6 +69,8 @@ function formatSignalQuality(value) {
 
 export default function ResultScreen() {
   const { t } = useI18n();
+  const { width, fontScale } = useWindowDimensions();
+  const fullWidthMetrics = width < 360 || fontScale > 1.3;
   const storedMeasurement = useCheckInStore(
     (state) => state.measurement,
   );
@@ -198,12 +202,6 @@ export default function ResultScreen() {
     );
   }
 
-  const warnings = Array.isArray(
-    measurement.warnings,
-  )
-    ? measurement.warnings.filter(Boolean)
-    : [];
-
   return (
     <SafeAreaView
       className="flex-1 bg-[#ECECEC]"
@@ -243,7 +241,9 @@ export default function ResultScreen() {
           <MetricCard
             label={t('checkin.heartRate')}
             value={round(measurement.bpm)}
-            unit="BPM"
+            unit={t('checkin.unitBpm')}
+            explanation={t('checkin.heartRateExplanation')}
+            fullWidth={fullWidthMetrics}
           />
 
           <MetricCard
@@ -252,8 +252,10 @@ export default function ResultScreen() {
               measurement.hrv_rmssd_ms,
               1,
             )}
-            unit="ms"
+            unit={t('checkin.unitMs')}
             helper="RMSSD"
+            explanation={t('checkin.rmssdExplanation')}
+            fullWidth={fullWidthMetrics}
           />
 
           <MetricCard
@@ -262,8 +264,10 @@ export default function ResultScreen() {
               measurement.hrv_sdnn_ms,
               1,
             )}
-            unit="ms"
+            unit={t('checkin.unitMs')}
             helper="SDNN"
+            explanation={t('checkin.sdnnExplanation')}
+            fullWidth={fullWidthMetrics}
           />
 
           <MetricCard
@@ -272,7 +276,9 @@ export default function ResultScreen() {
               measurement.breathing_rate_bpm,
               1,
             )}
-            unit="/min"
+            unit={t('checkin.unitPerMinute')}
+            explanation={t('checkin.breathingExplanation')}
+            fullWidth={fullWidthMetrics}
           />
 
           <MetricCard
@@ -280,6 +286,8 @@ export default function ResultScreen() {
             value={formatStress(
               measurement.stress_level,
             )}
+            explanation={t('checkin.stressExplanation')}
+            fullWidth={fullWidthMetrics}
             helper={
               measurement.stress_index != null
                 ? t('checkin.index', { value: round(measurement.stress_index) })
@@ -292,6 +300,8 @@ export default function ResultScreen() {
             value={formatSignalQuality(
               measurement.signal_quality,
             )}
+            explanation={t('checkin.signalExplanation')}
+            fullWidth={fullWidthMetrics}
             helper={
               measurement.face_coverage != null
                 ? t('checkin.faceCoverage', { value: formatSignalQuality(measurement.face_coverage) })
@@ -300,22 +310,7 @@ export default function ResultScreen() {
           />
         </View>
 
-        {warnings.length ? (
-          <View className="mt-5 rounded-[20px] bg-white px-4 py-4">
-            <Text className="font-inter-semibold text-[14px] text-[#181027]">
-              {t('checkin.readingNotes')}
-            </Text>
-
-            {warnings.slice(0, 3).map((warning) => (
-              <Text
-                key={String(warning)}
-                className="mt-2 font-inter text-[13px] leading-[19px] text-[#807B89]"
-              >
-                • {String(warning)}
-              </Text>
-            ))}
-          </View>
-        ) : null}
+        <ResultDescriptionCard measurement={measurement} />
 
         <View className="mt-5 flex-row items-start rounded-[20px] bg-[#181027] px-4 py-4">
           <HeartPulse

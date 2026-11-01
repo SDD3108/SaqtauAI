@@ -1,6 +1,8 @@
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -19,6 +21,48 @@ import useDashboard from '@/src/features/dashboard/hooks/useDashboard';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import NotificationBell from '@/src/features/notifications/components/NotificationBell';
 
+// End hours are exclusive. 29:00 is 05:00 on the following local date.
+const GREETINGS = [
+  [5, 'dashboard.greetingNight'],
+  [12, 'dashboard.greeting'],
+  [18, 'dashboard.greetingDay'],
+  [23, 'dashboard.greetingEvening'],
+  [29, 'dashboard.greetingNight'],
+];
+
+function localGreeting(now) {
+  return GREETINGS.find(([endHour]) => now.getHours() < endHour);
+}
+
+function useGreetingKey() {
+  const [key, setKey] = useState(() => localGreeting(new Date())[1]);
+
+  useFocusEffect(useCallback(() => {
+    let timer;
+    function sync() {
+      clearTimeout(timer);
+      const now = new Date();
+      const [endHour, greetingKey] = localGreeting(now);
+      setKey(greetingKey);
+      const next = new Date(now);
+      next.setHours(endHour, 0, 0, 0);
+      timer = setTimeout(sync, Math.max(1, next.getTime() - now.getTime()));
+    }
+
+    if (AppState.currentState == null || AppState.currentState === 'active') sync();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') sync();
+      else clearTimeout(timer);
+    });
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
+  }, []));
+
+  return key;
+}
+
 export default function DashboardScreen() {
   const account = useAuthStore((state) => state.account);
   const isGuest = useAuthStore((state) => state.isGuest);
@@ -26,7 +70,8 @@ export default function DashboardScreen() {
 
   const { latest, wellnessScore, statusLabel, message, loading, refreshing, error, refresh, retry } = useDashboard();
   const displayName = isGuest ? '' : String(account?.display_name || '').trim();
-  const greeting = displayName ? t('dashboard.greetingName', { name: displayName }) : t('dashboard.greeting');
+  const greetingKey = useGreetingKey();
+  const greeting = displayName ? t(`${greetingKey}Name`, { name: displayName }) : t(greetingKey);
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top']}>

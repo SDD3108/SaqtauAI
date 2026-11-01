@@ -1,6 +1,7 @@
 import { Activity, HeartPulse, Waves } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 
+import { formatRecordedDuration } from '@/src/features/check-in/utils/duration';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import {
   formatMeasurementDate,
@@ -24,6 +25,7 @@ function Metric({ icon: Icon, label, value }) {
 
 export default function HistoryCheckInCard({ measurement }) {
   const { t } = useI18n();
+  const duration = formatRecordedDuration(measurement, t);
   const quality = signalPercent(measurement.signal_quality);
 
   return (
@@ -34,7 +36,7 @@ export default function HistoryCheckInCard({ measurement }) {
             {formatMeasurementDate(measurement)}
           </Text>
           <Text className="mt-1 font-inter-medium text-[12px] text-[#8E879B]">
-            {formatMeasurementTime(measurement)} · 60s
+            {[formatMeasurementTime(measurement), duration].filter(Boolean).join(' · ')}
           </Text>
         </View>
 

@@ -25,7 +25,7 @@ test('translation fallback', () => {
   assert.equal(processingCopy('de').upload, 'Uploading video');
 });
 
-test('measurement polls are throttled to one request every 60 seconds per ID', () => {
+test('measurement polls are throttled to one request every 30 seconds per ID', () => {
   assert.equal(POLL_INTERVAL_MS, 60_000);
   const originalNow = Date.now;
   let now = 1_800_000_000_000;

@@ -1,6 +1,6 @@
 // One measurement-status request per minute at most, including AppState and push callbacks.
 // No timer runs in the background; the server sends remote push on completion.
-export const POLL_INTERVAL_MS = 60_000;
+export const POLL_INTERVAL_MS = 30_000;
 const lastChecked = new Map();
 
 export function takeMeasurementPollSlot(id) {

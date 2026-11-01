@@ -65,7 +65,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow SaqtauAI to use your camera for 60-second wellness check-ins.",
+          "cameraPermission": "Allow SaqtauAI to use your camera for 20-second wellness check-ins.",
           "microphonePermission": "Allow SaqtauAI to use your microphone for voice features.",
           "recordAudioAndroid": false
         }
