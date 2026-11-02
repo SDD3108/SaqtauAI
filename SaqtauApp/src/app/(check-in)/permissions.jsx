@@ -3,13 +3,13 @@ import {
   Activity,
   Camera,
   Mic,
-  ShieldCheck,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   AppState,
+  Image,
   Linking,
   Pressable,
   Text,
@@ -259,13 +259,12 @@ export default function PermissionsScreen() {
         </Pressable>
 
         <View className="mt-8">
-          <View className="h-14 w-14 items-center justify-center rounded-[20px] bg-white">
-            <ShieldCheck
-              size={26}
-              strokeWidth={1.8}
-              color="#181027"
-            />
-          </View>
+          <Image
+            source={require('@/assets/images/Logo2.png')}
+            accessibilityLabel="Saqtau AI"
+            resizeMode="contain"
+            style={{ width: 140, height: 36 }}
+          />
 
           <Text className="mt-6 font-inter-extrabold text-[34px] leading-[40px] tracking-[-1.1px] text-[#181027]">
             {t('checkin.permissionsTitle')}

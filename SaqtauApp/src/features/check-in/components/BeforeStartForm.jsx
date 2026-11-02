@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import IntroductionLogo from '@/assets/images/check-in/introduction-logo.svg';
+import SaqtauLogo from '@/assets/images/Logo.svg';
 import PrivateIcon from '@/assets/images/private.svg';
 import ProfileField from '@/src/components/ui/ProfileField';
 import useI18n from '@/src/features/localization/hooks/useI18n';
@@ -141,8 +141,8 @@ export default function BeforeStartForm({ profile, onContinue }) {
               {t('checkin.beforeTitle')}
             </Text>
             <View className="mt-7 flex-row items-center gap-3">
-              <View className="h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#181027]">
-                <IntroductionLogo width={29} height={28} />
+              <View className="h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white">
+                <SaqtauLogo width={34} height={32} accessibilityLabel="Saqtau AI" />
               </View>
               <View className="min-h-[52px] shrink rounded-[24px] rounded-bl-[3px] bg-[#D9D9D9] px-5 py-4">
                 <Text className="font-inter-semibold text-[16px] leading-[22px] tracking-[-0.7px] text-[#181027]">

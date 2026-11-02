@@ -9,6 +9,7 @@ import {
 } from 'lucide-react-native';
 import {
   AppState,
+  Image,
   Pressable,
   Text,
   View,
@@ -230,6 +231,17 @@ export default function CaptureScreen() {
                 strokeWidth={2}
               />
             </Pressable>
+
+            <View pointerEvents="none" className="mx-2 min-w-0 flex-1 items-center justify-center absolute inset-x-0">
+              <View className="max-w-full rounded-full bg-white px-3 py-1.5">
+                <Image
+                  source={require('@/assets/images/Logo2.png')}
+                  accessibilityLabel="Saqtau AI"
+                  resizeMode="contain"
+                  style={{ width: 92, height: 24, maxWidth: '100%' }}
+                />
+              </View>
+            </View>
 
             <View className="rounded-full bg-black/35 px-4 py-2">
               <Text className="font-inter-semibold text-[14px] tabular-nums text-white">
