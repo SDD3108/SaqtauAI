@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '@/src/services/storage/keys';
-import { getJSON, setJSON } from '@/src/services/storage/storage';
+import { getJSON, getString, removeStorageItem, setJSON, setString } from '@/src/services/storage/storage';
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
   checkin_reminders: true,
@@ -22,4 +22,16 @@ export async function getLocalNotificationPreferences() {
 export async function saveLocalNotificationPreferences(preferences) {
   await setJSON(STORAGE_KEYS.NOTIFICATION_PREFERENCES, preferences);
   return preferences;
+}
+
+const DAILY_REMINDER_KEY = 'saqtau.notifications.dailyReminderId';
+
+export function getDailyReminderId() {
+  return getString(DAILY_REMINDER_KEY);
+}
+
+export function saveDailyReminderId(identifier) {
+  return identifier
+    ? setString(DAILY_REMINDER_KEY, identifier)
+    : removeStorageItem(DAILY_REMINDER_KEY);
 }
