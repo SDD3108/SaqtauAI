@@ -41,19 +41,16 @@ export function removeFamilyMember(accountId) {
   });
 }
 
-export function createInviteLink({
-  invitedRole = 'child',
-  expiresInHours = 24,
-  maxUses = 1,
-} = {}) {
-  return apiRequest('/family/invite-links/', {
-    method: 'POST',
-    body: {
-      invited_role: invitedRole,
-      expires_in_hours: expiresInHours,
-      max_uses: maxUses,
-    },
-  });
+export function createInviteLink() {
+  return apiRequest('/family/invite-links/', { method: 'POST', body: { expires_in_hours: 24 } });
+}
+
+export function setFamilySharing(id, enabled) {
+  return apiRequest(`/family/${encode(id)}/sharing/`, { method: 'PATCH', body: { share_my_results: enabled } });
+}
+
+export function leaveFamily() {
+  return apiRequest('/family/leave/', { method: 'POST', body: {} });
 }
 
 export function inspectInviteLink(token) {

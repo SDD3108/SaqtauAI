@@ -9,7 +9,7 @@ function fixture() {
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'saqtau-release-test-'));
  const add=(name,contents)=>{const f=path.join(root,name);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,contents);};
  add('package.json',JSON.stringify({dependencies:{expo:'~57.0.21'}}));
- add('app.json',JSON.stringify({expo:{name:'SaqtauAI',version:'1.0.0',scheme:'saqtau',icon:'icon.png',ios:{bundleIdentifier:'com.sd3108.Saqtau-AI',associatedDomains:['applinks:links.saqtau.ai']},plugins:['expo-router','expo-notifications','expo-audio','expo-localization','./plugins/with-saqtau-screen-time']}}));
+ add('app.json',JSON.stringify({expo:{name:'SaqtauAI',version:'1.0.0',scheme:'saqtau',icon:'icon.png',ios:{bundleIdentifier:'com.sd3108.Saqtau-AI',associatedDomains:['applinks:saqtauai.com']},plugins:['expo-router','expo-notifications','expo-audio','expo-localization','./plugins/with-saqtau-screen-time']}}));
  add('eas.json',JSON.stringify({build:{production:{distribution:'store',environment:'production'}},submit:{production:{ios:{}}}}));
  add('icon.png','placeholder');
  for(const lang of ['en','ru','kk'])add(`src/features/localization/messages/${lang}.js`,`export default {\n  'a.b': 'test',\n};\n`);
@@ -19,7 +19,7 @@ function fixture() {
 
 test('release audit can pass key static checks',()=>{
  const f=fixture();try{
-  const checks=auditProject({root:f.root,env:{EXPO_PUBLIC_API_URL:'https://api.example.com/api/v1',EXPO_PUBLIC_INVITE_BASE_URL:'https://links.saqtau.ai/family/invite',EXPO_PUBLIC_PRIVACY_POLICY_URL:'https://example.com/privacy',EXPO_PUBLIC_SUPPORT_URL:'https://example.com/support'},requireEnv:true});
+  const checks=auditProject({root:f.root,env:{EXPO_PUBLIC_API_URL:'https://api.example.com/api/v1',EXPO_PUBLIC_INVITE_BASE_URL:'https://saqtauai.com/family/invite',EXPO_PUBLIC_PRIVACY_POLICY_URL:'https://example.com/privacy',EXPO_PUBLIC_SUPPORT_URL:'https://example.com/support'},requireEnv:true});
   assert.equal(checks.find(x=>x.id==='env-api').status,'PASS');
   assert.equal(checks.find(x=>x.id==='env-invite-domain').status,'PASS');
   assert.equal(checks.find(x=>x.id==='lang:kk').status,'PASS');

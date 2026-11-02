@@ -6,16 +6,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAppStore } from '@/src/store/app.store';
 import { useAuthStore } from '@/src/features/auth/auth.store';
 import {
   acceptInviteLink,
   inspectInviteLink,
-  isRouteUnavailable,
 } from '@/src/features/family/family.api';
 
 export default function InviteAcceptScreen({ token }) {
   const { t } = useI18n();
   const isGuest = useAuthStore((state) => state.isGuest);
+  const ready = useAppStore(s => s.isBootstrapped);
+  const bootError = useAppStore(s => s.bootstrapError);
+  const bootstrap = useAppStore(s => s.bootstrap);
+  useEffect(() => { bootstrap(); }, [bootstrap]);
+  const [attempt, setAttempt] = useState(0);
   const [invite, setInvite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -32,6 +37,7 @@ export default function InviteAcceptScreen({ token }) {
     let active = true;
 
     const load = async () => {
+      setRouteUnavailable(false); setInvite(null); setAccepted(false);
       setLoading(true);
       setError('');
       try {
@@ -39,12 +45,8 @@ export default function InviteAcceptScreen({ token }) {
         if (active) setInvite(result);
       } catch (loadError) {
         if (!active) return;
-        if (isRouteUnavailable(loadError)) {
-          setRouteUnavailable(true);
-          setError(t('family.legacyFallback'));
-        } else {
-          setError(loadError?.message || t('family.inviteInvalid'));
-        }
+        setRouteUnavailable(true);
+        setError(t(loadError.status === 410 ? 'family.expired' : (loadError.status === 404 ? 'family.inviteInvalid' : 'family.loadError')));
       } finally {
         if (active) setLoading(false);
       }
@@ -60,7 +62,7 @@ export default function InviteAcceptScreen({ token }) {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [token, t, attempt]);
 
   const accept = async () => {
     if (isGuest) {
@@ -77,13 +79,19 @@ export default function InviteAcceptScreen({ token }) {
       await acceptInviteLink(token);
       setAccepted(true);
     } catch (acceptError) {
-      setError(acceptError?.message || t('family.inviteInvalid'));
+      const labels = { family_full: 'family.full', self_invite: 'family.selfInvite',
+        invite_expired: 'family.expired', in_other_family: 'family.otherGroup' };
+      setError(t(labels[acceptError?.data?.code] || 'family.inviteInvalid'));
+
     } finally {
       setAccepting(false);
     }
   };
 
-  if (loading) {
+  if (!ready && bootError) {
+    return <SafeAreaView className="flex-1 items-center justify-center"><Pressable onPress={bootstrap}><Text>{t('common.retry')}</Text></Pressable></SafeAreaView>;
+  }
+  if (loading || !ready) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-[#ECECEC]">
         <ActivityIndicator color="#181027" />
@@ -128,12 +136,12 @@ export default function InviteAcceptScreen({ token }) {
           >
             <Text className="font-inter-bold text-[16px] text-white">{t('tabs.family')}</Text>
           </Pressable>
-        ) : routeUnavailable ? (
+        ) : routeUnavailable || !invite ? (
           <Pressable
-            onPress={() => router.replace('/(app)/(tabs)/family')}
+            onPress={() => setAttempt(n => n + 1)}
             className="mt-8 h-14 w-full max-w-[360px] items-center justify-center rounded-full bg-white active:opacity-80"
           >
-            <Text className="font-inter-bold text-[16px] text-[#181027]">{t('tabs.family')}</Text>
+            <Text className="font-inter-bold text-[16px] text-[#181027]">{t('common.retry')}</Text>
           </Pressable>
         ) : (
           <Pressable

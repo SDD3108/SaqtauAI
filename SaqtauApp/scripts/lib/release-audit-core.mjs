@@ -23,7 +23,7 @@ export function auditProject({root,env=process.env,requireEnv=false}={}){
  add('bundle-id',ios.bundleIdentifier==='com.sd3108.Saqtau-AI','iOS bundle ID matches the Screen Time extension','Do not change the bundle ID without migrating the extension.');
  add('scheme',app.scheme==='saqtau','Custom deep link scheme is saqtau','Update expo.scheme.');
  add('apple-team',ios.appleTeamId==='5QZMMBZ7R7','Apple Team ID is set explicitly','Make sure main and extension use the same team.','WARN');
- add('associated-domains',ios.associatedDomains?.includes('applinks:links.saqtau.ai'),'Associated Domains includes invitation host','Use exactly the domain configured in Universal Links.');
+ add('associated-domains',ios.associatedDomains?.includes('applinks:saqtauai.com'),'Associated Domains includes invitation host','Use exactly the domain configured in Universal Links.');
  add('ipad',ios.supportsTablet!==true,'iPad support is not enabled without separate QA','Test layouts on iPad if supportsTablet=true.','WARN');
  for(const name of ['expo-router','expo-notifications','expo-audio','expo-localization','./plugins/with-saqtau-screen-time'])add('plugin:'+name,plugin(plugins,name),`Expo plugin ${name} is configured`,'Merge this plugin into existing expo.plugins.');
  for(const [id,file] of [

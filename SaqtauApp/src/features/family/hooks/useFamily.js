@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
+import { useFocusEffect } from 'expo-router';
+import { AppState } from 'react-native';
 import {
   getFamily,
   getPendingInvites,
@@ -47,9 +49,13 @@ export default function useFamily() {
     }
   }, []);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     load();
-  }, [load]);
+    const sub = AppState.addEventListener('change', status => {
+      if (status === 'active') load({ refresh: true });
+    });
+    return () => sub.remove();
+  }, [load]));
 
   const respond = useCallback(
     async (inviteId, action) => {

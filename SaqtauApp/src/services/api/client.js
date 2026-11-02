@@ -39,6 +39,7 @@ export async function apiRequest(
   path,
   { method = 'GET', body, headers = {}, auth = true, timeout = API_TIMEOUT } = {},
 ) {
+  const safePath = path.replace(/(\/family\/invite-links\/)[^/]+/, '$1[redacted]');
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -80,7 +81,7 @@ export async function apiRequest(
   } catch (error) {
     console.warn('[API ERROR]', {
       method,
-      url: `${API_URL}${path}`,
+      url: `${API_URL}${safePath}`,
       status: error instanceof ApiError ? error.status : null,
       message: error?.message || 'Unknown request error',
     });
@@ -89,7 +90,7 @@ export async function apiRequest(
     }
 
     if (error?.name === 'AbortError') {
-      throw new ApiError(`Request timed out: ${method} ${API_URL}${path}`);
+      throw new ApiError(`Request timed out: ${method} ${API_URL}${safePath}`);
     }
 
     throw new ApiError('Network request failed');

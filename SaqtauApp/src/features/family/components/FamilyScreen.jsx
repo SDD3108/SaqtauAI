@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { RefreshCw } from 'lucide-react-native';
 import {
-  ActivityIndicator,
+  Alert, ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { leaveFamily } from '@/src/features/family/family.api';
 import AddIcon from '@/assets/images/add.svg';
 import InviteFamilyIcon from '@/assets/images/invite family.svg';
 import PrivateIcon from '@/assets/images/private.svg';
@@ -59,6 +60,7 @@ export default function FamilyScreen() {
               {t('family.title')}
             </Text>
             <Pressable
+              disabled={members.length + 1 >= max}
               onPress={openInvite}
               accessibilityRole="button"
               accessibilityLabel={t('family.invite')}
@@ -107,7 +109,7 @@ export default function FamilyScreen() {
               {t('family.connected')}
             </Text>
             <Text className="font-inter-medium text-[13px] text-[#8B8794]">
-              {members.length}/{max}
+              {members.length + 1}/{max}
             </Text>
           </View>
 
@@ -144,7 +146,7 @@ export default function FamilyScreen() {
             </View>
           )}
 
-          {members.length ? (
+          {members.length > 0 && members.length + 1 < max ? (
             <Pressable
               onPress={openInvite}
               className="mt-3 flex-row items-center rounded-[24px] bg-white px-4 py-4 active:opacity-80"
@@ -161,6 +163,15 @@ export default function FamilyScreen() {
             </Pressable>
           ) : null}
 
+          {members.length > 0 && (
+            <Pressable className="mt-4 min-h-12 justify-center px-4" accessibilityRole="button"
+              onPress={() => Alert.alert(t('family.leave'), t('family.leaveBody'), [
+                { text: t('common.cancel'), style: 'cancel' },
+                { text: t('family.leave'), style: 'destructive', onPress: async () => {
+                  try { await leaveFamily(); await reload(); } catch { Alert.alert(t('family.loadError')); }
+                } },
+              ])}><Text className="font-inter-semibold text-[#9A3C49]">{t('family.leave')}</Text></Pressable>
+          )}
           <View className="mt-6 flex-row items-start rounded-[24px] bg-[#E2E0E4] px-4 py-4">
             <PrivateIcon width={28} height={28} />
             <Text className="ml-3 flex-1 font-inter-medium text-[13px] leading-[20px] text-[#625D71]">

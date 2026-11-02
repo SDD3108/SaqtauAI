@@ -2,7 +2,7 @@
   "expo": {
     "name": "Saqtau AI",
     "slug": "SaqtauAI",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/SaqtauAI Logo.png",
     "scheme": "saqtau",
@@ -14,8 +14,7 @@
       "icon": "./assets/images/SaqtauAI Logo.png",
       "bundleIdentifier": "com.sd3108.Saqtau-AI",
       "associatedDomains": [
-        "applinks:links.saqtau.ai",
-        "applinks:links.saqtau.ai"
+        "applinks:saqtauai.com"
       ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -37,7 +36,24 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
-      "package": "com.sd3108.SaqtauAI"
+      "package": "com.sd3108.SaqtauAI",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "saqtauai.com",
+              "pathPrefix": "/family/invite/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",

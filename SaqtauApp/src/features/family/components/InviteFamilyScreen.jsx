@@ -29,21 +29,8 @@ import {
 
 function inviteUrlFromResponse(invite) {
   const token = String(invite?.token || '').trim();
-  const configuredBase = String(process.env.EXPO_PUBLIC_INVITE_BASE_URL || '')
-    .trim()
-    .replace(/\/+$/, '');
-
-  // Part 11 prefers the public HTTPS Universal Link when it is configured,
-  // even if an older backend still returns saqtau://... in `url`.
-  if (token && configuredBase) {
-    return `${configuredBase}/${encodeURIComponent(token)}`;
-  }
-
-  if (typeof invite?.url === 'string' && invite.url.trim()) {
-    return invite.url.trim();
-  }
-
-  return '';
+  return /^[A-Za-z0-9_-]{16,160}$/.test(token)
+    ? `https://saqtauai.com/family/invite/${encodeURIComponent(token)}` : '';
 }
 
 function InvitationQr({ value, t }) {
@@ -82,11 +69,7 @@ export default function InviteFamilyScreen() {
     setCreating(true);
     setMessage('');
     try {
-      const result = await createInviteLink({
-        invitedRole: 'child',
-        expiresInHours: 24,
-        maxUses: 1,
-      });
+      const result = await createInviteLink();
       setInvite(result);
       if (!inviteUrlFromResponse(result)) {
         setMessage(
@@ -100,7 +83,7 @@ export default function InviteFamilyScreen() {
           t('family.legacyFallback'),
         );
       } else {
-        setMessage(error?.message || t('family.createLinkError'));
+        setMessage(t(error?.data?.code === 'family_full' ? 'family.full' : 'family.createLinkError'));
       }
     } finally {
       setCreating(false);

@@ -17,10 +17,10 @@ export function redirectSystemPath({ path }) {
     }
 
     // Production Universal Link:
-    // https://links.saqtau.ai/family/invite/<token>
+    // https://saqtauai.com/family/invite/<token>
     if (
       (url.protocol === 'https:' || url.protocol === 'http:') &&
-      url.hostname === 'links.saqtau.ai' &&
+      url.hostname === 'saqtauai.com' &&
       url.pathname.startsWith('/family/invite/')
     ) {
       return withSearchAndHash(url);
