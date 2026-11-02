@@ -16,7 +16,7 @@ import {
 } from '@/src/services/notifications/push';
 
 export default function ReadyNotificationCard() {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const copy = processingCopy(language);
   const isGuest = useAuthStore((state) => state.isGuest);
   const token = useAuthStore((state) => state.token);
@@ -70,9 +70,9 @@ export default function ReadyNotificationCard() {
       }
       // Enabling result-ready notifications also opts into that preference.
       const preferences = await getLocalNotificationPreferences();
-      await saveLocalNotificationPreferences({ ...preferences, report_ready: true });
       // On backends with preferences support, honor the user's explicit opt-in.
       await updateNotificationPreferences({ report_ready: true });
+      await saveLocalNotificationPreferences({ ...preferences, report_ready: true });
       setState('enabled');
     } catch (err) {
       setError(err?.message || copy.notificationProblem);
@@ -85,7 +85,7 @@ export default function ReadyNotificationCard() {
   const disabled = state === 'loading';
 
   return (
-    <View className="mt-4 w-full max-w-[360px] rounded-[22px] bg-[#EAE7F1] px-4 py-4">
+    <View className="mt-4 w-full rounded-[22px] bg-[#EAE7F1] px-4 py-4">
       <View className="flex-row items-start">
         <View className="h-11 w-11 items-center justify-center rounded-[14px] bg-white">
           {active ? <Check size={22} color="#397A5A" strokeWidth={2.5} /> : <BellRing size={22} color="#654E9A" strokeWidth={1.9} />}
@@ -95,7 +95,7 @@ export default function ReadyNotificationCard() {
             {active ? copy.notificationActive : copy.notificationTitle}
           </Text>
           <Text className="mt-1 font-inter text-[12px] leading-[18px] text-[#716B7E]">
-            {isGuest ? copy.notificationGuest : state === 'denied' ? copy.notificationDisabled : state === 'unavailable' ? copy.notificationUnavailable : copy.notificationBody}
+            {isGuest ? copy.notificationGuest : state === 'denied' ? copy.notificationDisabled : state === 'unavailable' ? copy.notificationUnavailable : active ? t('checkin.runnerNotifyOn') : copy.notificationBody}
           </Text>
         </View>
       </View>

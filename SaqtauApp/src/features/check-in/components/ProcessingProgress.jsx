@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
-import { Check, CloudUpload, HeartPulse } from 'lucide-react-native';
 
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import { processingCopy, processingPercent, uploadPercent } from '@/src/features/check-in/utils/processingProgress.utils';
@@ -45,62 +44,20 @@ function ProgressTrack({ percent, inactive = false, animate = false }) {
   );
 }
 
-function StepIcon({ done, active, children }) {
-  return (
-    <View className="h-10 w-10 items-center justify-center rounded-[12px]" style={{ backgroundColor: done ? '#E4F3E8' : active ? '#EBE6F6' : '#F1EFF3' }}>
-      {done ? <Check size={21} strokeWidth={2.4} color="#397A5A" /> : children}
-    </View>
-  );
-}
-
 export default function ProcessingProgress({ state, uploadProgress, measurement }) {
   const { language } = useI18n();
   const copy = processingCopy(language);
-  const uploading = state === 'uploading' || state === 'upload-error';
-  const offline = state === 'offline';
-  const complete = state === 'completed';
-  const failed = state === 'failed';
-  const uploadDone = !uploading;
-  const actualAnalysisPercent = processingPercent(measurement);
-  const analysisValue = complete ? 100 : failed ? null : actualAnalysisPercent;
-  const uploadValue = uploadDone ? 100 : uploadPercent(uploadProgress);
-
+  const uploading = state === 'uploading';
+  const value = uploading ? uploadPercent(uploadProgress) : state === 'completed' ? 100 : processingPercent(measurement);
   return (
-    <View className="mt-8 w-full max-w-[360px] rounded-[24px] bg-white px-5 py-5">
-      <Text className="mb-5 font-inter-semibold text-[17px] text-[#181027]">{copy.title}</Text>
-
-      <View className="flex-row items-center">
-        <StepIcon done={uploadDone} active={uploading}><CloudUpload size={21} color={uploading ? '#654E9A' : '#938D9A'} /></StepIcon>
-        <View className="ml-3 flex-1">
-          <Text className="font-inter-semibold text-[14px] text-[#181027]">{copy.upload}</Text>
-          <Text className="mt-0.5 font-inter text-[12px] text-[#8B8691]">{uploadDone ? copy.finished : copy.uploading}</Text>
-        </View>
-        <Text className="font-inter-semibold text-[14px] text-[#654E9A]">{uploadValue}%</Text>
-      </View>
-      <ProgressTrack percent={uploadValue} inactive={uploadDone} />
-
-      <View className="my-5 h-px bg-[#EFEDF0]" />
-
-      <View className="flex-row items-center">
-        <StepIcon done={complete} active={!uploading && !failed && !offline}><HeartPulse size={21} color={!uploading && !failed && !offline ? '#654E9A' : '#938D9A'} /></StepIcon>
-        <View className="ml-3 flex-1">
-          <Text className="font-inter-semibold text-[14px] text-[#181027]">{copy.analyze}</Text>
-          <Text className="mt-0.5 font-inter text-[12px] text-[#8B8691]">
-            {complete ? copy.finished : offline ? copy.retrying : uploading ? copy.waiting : failed ? copy.retrying : copy.analyzing}
-          </Text>
-        </View>
-        <Text className="font-inter-semibold text-[14px] text-[#654E9A]">
-          {analysisValue === null ? '—' : `${analysisValue}%`}
+    <View className="mt-5 rounded-[16px] bg-white px-4 py-3">
+      <View className="flex-row items-center justify-between gap-2">
+        <Text className="flex-1 font-inter-semibold text-[13px] text-[#51495F]">
+          {uploading ? copy.upload : copy.analyze}
         </Text>
+        {value !== null && <Text className="font-inter-semibold text-[13px] text-[#654E9A]">{value}%</Text>}
       </View>
-      <ProgressTrack
-        percent={uploading || offline || failed ? 0 : analysisValue}
-        inactive={uploading || offline || failed}
-        animate={!uploading && !offline && !failed && !complete && analysisValue === null}
-      />
-      {!uploading && !failed && !complete && analysisValue === null ? (
-        <Text className="mt-3 font-inter text-[12px] text-[#8B8691]">{copy.noEstimate}</Text>
-      ) : null}
+      <ProgressTrack percent={value} animate={value === null} />
     </View>
   );
 }

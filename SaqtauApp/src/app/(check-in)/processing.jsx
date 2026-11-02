@@ -3,8 +3,9 @@ import useI18n from '@/src/features/localization/hooks/useI18n';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Notifications from 'expo-notifications';
 import { Stack, router } from 'expo-router';
-import { CheckCircle2, RotateCcw, WifiOff, } from 'lucide-react-native';
-import { ActivityIndicator, AppState, Pressable, ScrollView, Text, View, } from 'react-native';
+import Wordmark from '@/assets/images/Logo2.svg';
+import WaitingRunner from '@/src/features/check-in/components/WaitingRunner';
+import { AppState, Pressable, ScrollView, Text, View, } from 'react-native';
 import { useCallback, useEffect, useRef, useState, } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getMeasurement, uploadCameraMeasurement, } from '@/src/features/check-in/check-in.api';
@@ -14,7 +15,7 @@ import { useAuthStore } from '@/src/features/auth/auth.store';
 import { useOnboardingStore } from '@/src/features/onboarding/onboarding.store';
 import ProcessingProgress from '@/src/features/check-in/components/ProcessingProgress';
 import ReadyNotificationCard from '@/src/features/check-in/components/ReadyNotificationCard';
-import { processingCopy, uploadPercent } from '@/src/features/check-in/utils/processingProgress.utils';
+import { processingCopy } from '@/src/features/check-in/utils/processingProgress.utils';
 import { POLL_INTERVAL_MS, takeMeasurementPollSlot } from '@/src/features/check-in/services/measurementPolling';
 import { notifyMeasurementReady, noteRemoteMeasurementNotification } from '@/src/services/notifications/push';
 async function deleteLocalVideo(uri) {
@@ -287,105 +288,45 @@ export default function ProcessingScreen() {
         resetAll();
         router.replace('/(check-in)/capture');
     }
-    const progressPercent = uploadPercent(uploadProgress);
     const isUploading = screenState === 'uploading';
     const isOffline = screenState === 'offline';
     const isFailed = screenState === 'failed';
     const isUploadError = screenState === 'upload-error';
-    return (<SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom']}>
-
-      <Stack.Screen options={{ gestureEnabled: false }}/>
-
-      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 16 }} showsVerticalScrollIndicator={false}>
-
-        <View className="flex-1 items-center justify-center">
-
-          <View className="h-[132px] w-[132px] items-center justify-center rounded-full bg-white">
-
-            {isOffline ? (<WifiOff size={38} strokeWidth={1.7} color="#181027"/>) : isFailed || isUploadError ? (<RotateCcw size={38} strokeWidth={1.7} color="#181027"/>) : screenState === 'completed' ? (<CheckCircle2 size={42} strokeWidth={1.7} color="#397A5A"/>) : (<ActivityIndicator size="large" color="#181027"/>)}
-
+    const waiting = isUploading || screenState === 'processing' || isOffline;
+    const title = isUploading ? t('checkin.uploading') : isUploadError ? t('checkin.uploadInterrupted')
+        : isFailed ? t('checkin.signalFailed') : isOffline ? t('checkin.stillWorking')
+        : screenState === 'completed' ? copy.complete : t('checkin.readingSignal');
+    const body = isUploadError || isFailed ? message : isOffline ? t('checkin.offlinePending')
+        : isUploading ? t('checkin.runnerUpload') : t('checkin.opensAutomatically');
+    return (
+      <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top', 'bottom']}>
+        <Stack.Screen options={{ gestureEnabled: false }} />
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1, alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, flexGrow: 1 }}>
+            <View accessibilityRole="image" accessible accessibilityLabel="Saqtau AI">
+              <Wordmark width={140} height={36} />
+            </View>
+            <Text accessibilityRole="header" className="mt-7 font-inter-extrabold text-[29px] leading-[36px] text-[#181027]">{title}</Text>
+            {!!body && <Text className="mt-2 font-inter text-[15px] leading-[22px] text-[#625B70]">{body}</Text>}
+            {!isFailed && !isUploadError && !isOffline && (
+              <ProcessingProgress state={screenState} uploadProgress={uploadProgress} measurement={currentMeasurement} />
+            )}
+            <View style={{ flexGrow: 1.4, minHeight: 24 }} />
+            {waiting && <WaitingRunner />}
+            {(screenState === 'processing' || isOffline) && <ReadyNotificationCard />}
+            {(isUploadError || isOffline || isFailed) && (
+              <Pressable accessibilityRole="button" disabled={isOffline && checking}
+                onPress={isUploadError ? retryUpload : isFailed ? startOver : () => checkStatus(measurementId)}
+                className="mt-4 min-h-[54px] items-center justify-center rounded-[16px] bg-[#181027] px-4 py-3 active:opacity-80 disabled:opacity-60">
+                <Text className="text-center font-inter-semibold text-[15px] text-white">
+                  {t(isUploadError ? 'checkin.retryUpload' : isFailed ? 'checkin.tryAnother' : 'checkin.checkAgain')}
+                </Text>
+              </Pressable>
+            )}
+            <View style={{ flexGrow: 0.8, minHeight: 12 }} />
           </View>
-
-          <Text className="mt-9 text-center font-inter-extrabold text-[30px] leading-[36px] tracking-[-0.9px] text-[#181027]">
-
-            {isUploading
-            ? t('checkin.uploading')
-            : isFailed
-                ? t('checkin.signalFailed')
-                : isUploadError
-                    ? t('checkin.uploadInterrupted')
-                    : isOffline
-                        ? t('checkin.stillWorking')
-                        : screenState === 'completed' ? copy.complete : t('checkin.readingSignal')}
-
-          </Text>
-
-          <Text className="mt-4 max-w-[330px] text-center font-inter text-[16px] leading-[23px] text-[#807B89]">
-
-            {isUploading
-            ? t('checkin.uploadBody', { percent: progressPercent })
-            : isFailed
-                ? message
-                : isUploadError
-                    ? message
-                    : isOffline
-                        ? t('checkin.offlinePending')
-                        : screenState === 'completed' ? '' : copy.analysisBody}
-
-          </Text>
-
-          <ProcessingProgress state={screenState} uploadProgress={uploadProgress} measurement={currentMeasurement}/>
-
-          {(screenState === 'processing' || screenState === 'offline') ? <ReadyNotificationCard /> : null}
-
-        </View>
-
-        <View className="pb-4 pt-6">
-
-          {isUploadError ? (<Pressable accessibilityRole="button" onPress={retryUpload} className="h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90">
-
-              <Text className="font-inter-semibold text-[16px] text-white">
-
-                {t('checkin.retryUpload')}
-
-              </Text>
-
-            </Pressable>) : null}
-
-          {isOffline ? (<Pressable accessibilityRole="button" disabled={checking} onPress={() => checkStatus(measurementId, {
-                scheduleNext: true,
-            })} className="h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90 disabled:opacity-60">
-
-              {checking ? (<ActivityIndicator color="#FFFFFF"/>) : (<Text className="font-inter-semibold text-[16px] text-white">
-
-                  {t('checkin.checkAgain')}
-
-                </Text>)}
-
-            </Pressable>) : null}
-
-          {isFailed ? (<Pressable accessibilityRole="button" onPress={startOver} className="h-[58px] items-center justify-center rounded-[16px] bg-[#181027] active:opacity-90">
-
-              <Text className="font-inter-semibold text-[16px] text-white">
-
-                {t('checkin.tryAnother')}
-
-              </Text>
-
-            </Pressable>) : null}
-
-          {!isUploading &&
-            !isUploadError &&
-            !isOffline &&
-            !isFailed ? (<Text className="text-center font-inter text-[12px] leading-[17px] text-[#807B89]">
-
-              {t('checkin.opensAutomatically')}
-
-            </Text>) : null}
-
-        </View>
-
-      </ScrollView>
-
-    </SafeAreaView>);
+        </ScrollView>
+      </SafeAreaView>
+    );
 }
