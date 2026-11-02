@@ -383,6 +383,7 @@ export default {
   'checkin.resultUnavailableBody': 'Не удалось загрузить этот check-in.',
   'checkin.backHome': 'На главную',
   'checkin.complete': 'Check-in завершён',
+  'checkin.exportPdf': 'Экспортировать результат в PDF',
   'checkin.resultTitle': 'Вот что показало\nваше тело.',
   'checkin.resultBody': 'Спокойный snapshot этого check-in. Важнее смотреть на тенденции, а не на одно число.',
   'checkin.heartRate': 'Пульс',

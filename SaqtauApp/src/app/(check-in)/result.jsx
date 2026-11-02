@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getMeasurement } from '@/src/features/check-in/check-in.api';
+import ExportCheckInButton from '@/src/features/check-in/components/ExportCheckInButton';
 import MetricCard from '@/src/features/check-in/components/MetricCard';
 import ResultDescriptionCard from '@/src/features/check-in/result-insights/ResultDescriptionCard';
 import {
@@ -236,6 +237,10 @@ export default function ResultScreen() {
         <Text className="mt-3 font-inter text-[16px] leading-[23px] text-[#807B89]">
           {t('checkin.resultBody')}
         </Text>
+
+        {measurement.status === 'completed' ? (
+          <ExportCheckInButton measurement={measurement} />
+        ) : null}
 
         <View className="mt-8 flex-row flex-wrap justify-between gap-y-3">
           <MetricCard

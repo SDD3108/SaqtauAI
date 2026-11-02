@@ -383,6 +383,7 @@ export default {
   'checkin.resultUnavailableBody': 'Бұл check-in нәтижесін жүктеу мүмкін болмады.',
   'checkin.backHome': 'Басты бетке',
   'checkin.complete': 'Check-in аяқталды',
+  'checkin.exportPdf': 'Нәтижені PDF ретінде экспорттау',
   'checkin.resultTitle': 'Денеңіз бізге\nмынаны көрсетті.',
   'checkin.resultBody': 'Осы check-in-нің тыныш snapshot-ы. Бір саннан гөрі уақыт бойынша үрдістер маңызды.',
   'checkin.heartRate': 'Пульс',

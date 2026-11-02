@@ -41,6 +41,8 @@ export function sanitizeMeasurement(measurement) {
     effective_fps: measurement.effective_fps,
     analyzed_frames: measurement.analyzed_frames,
     face_coverage: measurement.face_coverage,
+    waveform: Array.isArray(measurement.waveform) ? measurement.waveform : [],
+    notes: Array.isArray(measurement.notes) ? measurement.notes : [],
     warnings: Array.isArray(measurement.warnings)
       ? measurement.warnings
       : [],

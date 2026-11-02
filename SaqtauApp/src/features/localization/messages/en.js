@@ -383,6 +383,7 @@ export default {
   'checkin.resultUnavailableBody': 'We could not load this check-in.',
   'checkin.backHome': 'Back to Home',
   'checkin.complete': 'Check-in complete',
+  'checkin.exportPdf': 'Export result as PDF',
   'checkin.resultTitle': 'Here’s what your\nbody shared.',
   'checkin.resultBody': 'A calm snapshot from this check-in. Look for patterns over time rather than a single number.',
   'checkin.heartRate': 'Heart rate',
