@@ -89,7 +89,7 @@ export function buildReportHtml(data, { language = 'en', now = new Date(), fonts
   const valueHtml = (value, suffix = '', digits = 1) => finite(value) ? `${e(number(value, digits))}${suffix ? `<small>${e(suffix)}</small>` : ''}` : e(t.noData);
   const card = (label, value, help = '', color = '') => `<div class="card ${color}"><div class="label">${e(label)}</div><div class="value">${value}</div>${help ? `<div class="help">${help}</div>` : ''}</div>`;
 
-  add(`<header><div class="brand">${REPORT_LOGO}<span>SaqtauAI</span></div><p class="brand-subtitle">${e(t.brandSubtitle)}</p><div class="header-right"><b>${e(t.title)}</b><p>${e(t.generated)}: ${e(date(exportedAt.toISOString(), true))}</p></div></header>`, 50.25);
+  add(`<header><div class="brand">${REPORT_LOGO}<span>Saqtau AI</span></div><p class="brand-subtitle">${e(t.brandSubtitle)}</p><div class="header-right"><b>${e(t.title)}</b><p>${e(t.generated)}: ${e(date(exportedAt.toISOString(), true))}</p></div></header>`, 50.25);
   heading(t.profile, false, 13.5, 25);
   current().cursor += 6;
   tableFlow([[t.name, account.display_name || profile.display_name || profile.name || (guest ? t.guest : t.noData)], [t.email, account.email || t.noData], [t.birthday, validBirth ? date(birth.toISOString()) : t.noData], [t.age, finite(age) ? `${age} ${t.years}` : t.noData], [t.height, unit(profile.heightCm, t.cm)], [t.weight, unit(profile.weightKg, t.kg)], [t.created, date(account.created_at)]], 'profile');

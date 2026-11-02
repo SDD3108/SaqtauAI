@@ -10,8 +10,8 @@ h2, h3, p { margin: 0; }
 h2 { font-size: 12.5pt; font-weight: 700; line-height: 18pt; }
 h3 { font-size: 10pt; font-weight: 700; line-height: 14pt; }
 header { height: 50.25pt; position: relative; border-bottom: 1.5pt solid #1a1a2e; }
-.brand { position: absolute; top: 2pt; left: 0; color: #2e3a87; font-size: 19pt; font-weight: 700; line-height: 26pt; display: flex; align-items: center; gap: 6.75pt; }
-.brand svg { width: 16.5pt; height: 16.5pt; }
+.brand { position: absolute; top: 2pt; left: 0; color: #181027; font-size: 19pt; font-weight: 700; line-height: 26pt; display: flex; align-items: center; gap: 6.75pt; }
+.brand svg { width: 23.13pt; height: 22pt; flex: none; }
 .brand-subtitle { position: absolute; top: 30pt; left: 0; color: #8a8a99; line-height: 12pt; }
 .header-right { position: absolute; right: 0; top: 0; text-align: right; }
 .header-right b { font-size: 13pt; line-height: 18pt; }
