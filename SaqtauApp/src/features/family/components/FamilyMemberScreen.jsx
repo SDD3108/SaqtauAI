@@ -1,3 +1,5 @@
+import useGuardianships from '@/src/features/family/hooks/useGuardianships';
+import GuardianshipPanel from '@/src/features/family/components/GuardianshipPanel';
 import { useState } from 'react';
 import { setFamilySharing } from '@/src/features/family/family.api';
 import useI18n from '@/src/features/localization/hooks/useI18n';
@@ -5,7 +7,7 @@ import { router } from 'expo-router';
 import { ChevronLeft, RefreshCw } from 'lucide-react-native';
 import {
   ActivityIndicator,
-  Alert, Switch,
+  Alert, Switch, RefreshControl,
   Pressable,
   ScrollView,
   Text,
@@ -32,6 +34,10 @@ export default function FamilyMemberScreen({ accountId }) {
   const { t } = useI18n();
   const { member, loading, removing, error, reload, remove } = useFamilyMember(accountId);
 
+  const guardians = useGuardianships();
+  const approved = guardians.ready && guardians.links.some(link =>
+    link.direction === 'as_adult' && link.status === 'accepted' && String(link.counterpart_id) === String(accountId)
+  );
   const [saving, setSaving] = useState(false);
   const open = (screen) => {
     router.push(`/(app)/family/${encodeURIComponent(String(accountId))}/${screen}`);
@@ -67,7 +73,8 @@ export default function FamilyMemberScreen({ accountId }) {
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECECEC]" edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 45 }} showsVerticalScrollIndicator={false}>
+      <ScrollView refreshControl={<RefreshControl refreshing={false} onRefresh={() => { reload(); guardians.refresh(); }} />}
+        contentContainerStyle={{ paddingBottom: 45 }} showsVerticalScrollIndicator={false}>
         <View className="flex-row items-center px-5 pt-2">
           <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('common.back')} className="h-11 w-11 items-center justify-center rounded-full bg-white">
             <ChevronLeft size={23} color="#181027" />
@@ -139,7 +146,8 @@ export default function FamilyMemberScreen({ accountId }) {
               {t('family.title')}
             </Text>
 
-            {member.role === 'member' && <View className="mb-3 flex-row items-center rounded-[22px] bg-white p-4">
+            <GuardianshipPanel member={member} state={guardians} />
+            {(member.can_share_results ?? (member.role === 'member')) && <View className="mb-3 flex-row items-center rounded-[22px] bg-white p-4">
               <Text className="mr-3 flex-1 font-inter-semibold text-[#181027]">{t('family.myShare', {name:member.name})}</Text>
               <Switch accessibilityLabel={t('family.myShare', {name:member.name})} value={!!member.share_my_results} disabled={saving}
                 onValueChange={async value => {
@@ -149,7 +157,7 @@ export default function FamilyMemberScreen({ accountId }) {
                   finally { setSaving(false); }
                 }} />
             </View>}
-            {member.role !== 'member' && <>
+            {approved && <>
             <FamilyActionRow
               Icon={VoiceIcon}
               title={t('family.voice')}

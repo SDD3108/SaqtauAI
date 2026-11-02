@@ -41,6 +41,7 @@ export function normalizeFamilyResponse(payload) {
     : payload?.members || payload?.results || [];
 
   return {
+    managedMembers: (payload?.managed_members || []).map(normalizeFamilyMember).filter(Boolean),
     members: rawMembers.map(normalizeFamilyMember).filter(Boolean),
     max: Number(payload?.max || 5),
   };

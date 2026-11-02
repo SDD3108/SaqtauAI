@@ -5,6 +5,7 @@ function normalizeKind(value) {
 }
 
 export function getNotificationKind(notification) {
+  if (normalizeKind(notification?.data?.type) === 'guardianship_invite') return 'guardianship_invite';
   return normalizeKind(notification?.kind || notification?.type || notification?.data?.type || notification?.data?.kind);
 }
 
@@ -15,6 +16,7 @@ function familyInviteToken(notification) {
 
 export function getNotificationDestination(notification) {
   const kind = getNotificationKind(notification);
+  if (kind === 'guardianship_invite') return '/(app)/(tabs)/family';
   if (kind === 'measurement_ready' || kind === 'checkin_ready' || kind === 'check_in_ready') return '/(check-in)/result';
   if (kind.includes('result') || kind.includes('measurement')) return '/(app)/(tabs)/history';
   if (kind.includes('family') || kind.includes('invite')) {

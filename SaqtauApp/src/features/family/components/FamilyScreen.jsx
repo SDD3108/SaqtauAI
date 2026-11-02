@@ -1,3 +1,5 @@
+import useGuardianships from '@/src/features/family/hooks/useGuardianships';
+import GuardianshipPanel from '@/src/features/family/components/GuardianshipPanel';
 import { router } from 'expo-router';
 import { RefreshCw } from 'lucide-react-native';
 import {
@@ -23,6 +25,7 @@ export default function FamilyScreen() {
   const { t } = useI18n();
   const {
     members,
+    managedMembers = [],
     max,
     invites,
     loading,
@@ -35,6 +38,7 @@ export default function FamilyScreen() {
     declineInvite,
   } = useFamily();
 
+  const guardians = useGuardianships();
   const openInvite = () => router.push('/(app)/family/invite');
 
   if (loading) {
@@ -51,7 +55,7 @@ export default function FamilyScreen() {
         contentContainerStyle={{ paddingBottom: 130 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#181027" />
+          <RefreshControl refreshing={refreshing} onRefresh={() => { refresh(); guardians.refresh(); }} tintColor="#181027" />
         }
       >
         <View className="px-5 pb-2 pt-3">
@@ -87,6 +91,7 @@ export default function FamilyScreen() {
             </View>
           ) : null}
 
+          <GuardianshipPanel state={guardians} />
           {invites.length > 0 ? (
             <View className="mb-5">
               <Text className="mb-3 font-inter-bold text-[20px] tracking-[-0.4px] text-[#181027]">
@@ -163,6 +168,16 @@ export default function FamilyScreen() {
             </Pressable>
           ) : null}
 
+          {managedMembers.length > 0 && (
+            <View className="mt-5">
+              <Text className="mb-3 font-inter-bold text-[20px] text-[#181027]">{t('guard.managed')}</Text>
+              {managedMembers.map(member => (
+                <FamilyMemberCard key={member.accountId} member={member} onPress={() =>
+                  router.push({ pathname: '/(app)/family/[accountId]', params: {accountId: member.accountId} })
+                } />
+              ))}
+            </View>
+          )}
           {members.length > 0 && (
             <Pressable className="mt-4 min-h-12 justify-center px-4" accessibilityRole="button"
               onPress={() => Alert.alert(t('family.leave'), t('family.leaveBody'), [
