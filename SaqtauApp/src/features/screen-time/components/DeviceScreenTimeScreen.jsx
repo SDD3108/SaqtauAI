@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 
-import TimePickerSheet from '@/src/features/family/components/TimePickerSheet';
+import ScreenTimeTimePicker from '@/src/features/screen-time/components/ScreenTimeTimePicker';
 import { formatMinutes } from '@/src/features/family/family-controls.utils';
 import useI18n from '@/src/features/localization/hooks/useI18n';
 import useDeviceScreenTime from '@/src/features/screen-time/hooks/useDeviceScreenTime';
@@ -448,7 +448,7 @@ export default function DeviceScreenTimeScreen() {
         </View>
       </View>
 
-      <TimePickerSheet
+      <ScreenTimeTimePicker
         visible={picker === 'from'}
         title={t('screenTime.start')}
         value={policy.quiet_hours.from}
@@ -458,7 +458,7 @@ export default function DeviceScreenTimeScreen() {
           setPicker(null);
         }}
       />
-      <TimePickerSheet
+      <ScreenTimeTimePicker
         visible={picker === 'to'}
         title={t('screenTime.end')}
         value={policy.quiet_hours.to}

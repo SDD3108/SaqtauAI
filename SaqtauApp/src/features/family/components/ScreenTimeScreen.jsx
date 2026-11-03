@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Switch, Text, View } from 'react-native';
 
 import FamilySubpageShell from '@/src/features/family/components/FamilySubpageShell';
-import TimePickerSheet from '@/src/features/family/components/TimePickerSheet';
+import ScreenTimeTimePicker from '@/src/features/screen-time/components/ScreenTimeTimePicker';
 import UpdatedAtLabel from '@/src/features/family/components/UpdatedAtLabel';
 import { formatMinutes } from '@/src/features/family/family-controls.utils';
 import useFamilyScreenTime from '@/src/features/family/hooks/useFamilyScreenTime';
@@ -147,7 +147,7 @@ export default function ScreenTimeScreen({ accountId }) {
 
       <UpdatedAtLabel value={updatedAt} />
 
-      <TimePickerSheet
+      <ScreenTimeTimePicker
         visible={picker === 'from'}
         title={t('screenTime.start')}
         value={quiet.from}
@@ -157,7 +157,7 @@ export default function ScreenTimeScreen({ accountId }) {
           setQuietHours({ from });
         }}
       />
-      <TimePickerSheet
+      <ScreenTimeTimePicker
         visible={picker === 'to'}
         title={t('screenTime.end')}
         value={quiet.to}
