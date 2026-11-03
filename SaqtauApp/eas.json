@@ -18,7 +18,8 @@
       "distribution": "store",
       "environment": "production",
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "distribution": "store"
       }
     }
   },
