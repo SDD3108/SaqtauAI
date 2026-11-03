@@ -8,7 +8,7 @@
     "scheme": "saqtau",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundler": "metro",
       "appleTeamId": "5QZMMBZ7R7",
       "icon": "./assets/images/SaqtauAI Logo.png",
