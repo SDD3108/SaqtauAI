@@ -22,6 +22,7 @@
     },
     "android": {
       "bundler": "metro",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/SaqtauAI Logo.png",
@@ -121,7 +122,9 @@
       "@react-native-community/datetimepicker",
       "./plugins/with-saqtau-screen-time",
       "expo-sharing",
-      "expo-asset"
+      "expo-asset",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
