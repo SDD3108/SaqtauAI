@@ -28,6 +28,7 @@ export default function StartupAnimation({
   error,
   onAnimationComplete,
   onRetry,
+  onSignIn,
 }) {
   const { t } = useI18n();
 
@@ -215,12 +216,18 @@ export default function StartupAnimation({
     return (
       <View className="flex-1 items-center justify-center bg-[#ECECEC] px-8">
         <Text className="font-inter-bold text-center text-[22px] leading-7 text-[#181027]">
-          {t('onboarding.startupErrorTitle')}
+          {t(error.titleKey || 'onboarding.startupErrorTitle')}
         </Text>
 
         <Text className="font-inter mt-3 max-w-[310px] text-center text-[16px] leading-6 text-[#807B89]">
-          {t('onboarding.startupErrorBody')}
+          {t(error.messageKey || 'onboarding.startupErrorBody')}
         </Text>
+
+        {error.diagnostic ? (
+          <Text selectable className="mt-3 text-center font-inter text-[12px] text-[#807B89]">
+            {t('onboarding.startupDiagnostic', { code: error.diagnostic })}
+          </Text>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
@@ -231,6 +238,17 @@ export default function StartupAnimation({
             {t('common.retry')}
           </Text>
         </Pressable>
+        {onSignIn ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onSignIn}
+            className="mt-3 min-h-[48px] items-center justify-center px-5 py-3"
+          >
+            <Text className="font-inter-semibold text-[16px] text-[#181027]">
+              {t('auth.signIn')}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -283,6 +301,11 @@ export default function StartupAnimation({
           </Text>
         </Animated.View>
       </Animated.View>
+      <View accessibilityLiveRegion="polite" className="absolute bottom-16 left-8 right-8">
+        <Text className="text-center font-inter text-[14px] leading-5 text-[#807B89]">
+          {t('onboarding.startupConnecting')}
+        </Text>
+      </View>
     </View>
   );
 }

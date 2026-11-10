@@ -19,7 +19,9 @@ export default function SignInScreen() {
     <AuthShell
       title={t('auth.welcomeBack')}
       subtitle={t('auth.signInSubtitle')}
-      onBack={() => router.back()}
+      onBack={() => router.canGoBack()
+        ? router.back()
+        : router.replace('/(onboarding)/startup')}
       footer={
         <Pressable
           accessibilityRole="button"

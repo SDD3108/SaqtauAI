@@ -3,11 +3,12 @@ import { API_TIMEOUT, API_URL } from '@/src/constants/config';
 let accessToken = null;
 
 export class ApiError extends Error {
-  constructor(message, status = 0, data = null) {
+  constructor(message, status = 0, data = null, code = 'HTTP') {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
+    this.code = code;
   }
 }
 
@@ -35,7 +36,7 @@ function getErrorMessage(data, status) {
   return `Request failed with status ${status}`;
 }
 
-export async function apiRequest(
+async function requestOnce(
   path,
   { method = 'GET', body, headers = {}, auth = true, timeout = API_TIMEOUT } = {},
 ) {
@@ -69,9 +70,19 @@ export async function apiRequest(
     });
 
     const contentType = response.headers.get('content-type') || '';
-    const data = contentType.includes('application/json')
-      ? await response.json()
-      : await response.text();
+    const text = await response.text();
+    let data = text || null;
+    if (text && contentType.includes('application/json')) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // Preserve an HTTP failure even when a proxy returns malformed JSON.
+        throw new ApiError(
+          'Invalid server response', response.status, null,
+          response.ok ? 'INVALID_RESPONSE' : 'HTTP',
+        );
+      }
+    }
 
     if (!response.ok) {
       throw new ApiError(getErrorMessage(data, response.status), response.status, data);
@@ -79,22 +90,43 @@ export async function apiRequest(
 
     return data;
   } catch (error) {
+    const failure = error instanceof ApiError
+      ? error
+      : new ApiError(
+          error?.name === 'AbortError' ? 'Request timed out' : 'Network request failed',
+          0,
+          null,
+          error?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK',
+        );
+    // No headers, bodies, personal data, tokens, or server error text in logs.
     console.warn('[API ERROR]', {
       method,
-      url: `${API_URL}${safePath}`,
-      status: error instanceof ApiError ? error.status : null,
-      message: error?.message || 'Unknown request error',
+      path: safePath.split('?')[0].replace(
+        /(\/auth\/password\/reset\/)[^/]+/, '$1[redacted]',
+      ),
+      code: failure.code,
+      status: failure.status,
     });
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    if (error?.name === 'AbortError') {
-      throw new ApiError(`Request timed out: ${method} ${API_URL}${safePath}`);
-    }
-
-    throw new ApiError('Network request failed');
+    throw failure;
   } finally {
     clearTimeout(timeoutId);
+  }
+}
+
+// Retries are opt-in, bounded, and restricted to safe reads. Never replay POSTs.
+export async function apiRequest(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const retries = ['GET', 'HEAD'].includes(method) && options.retries === 1 ? 1 : 0;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await requestOnce(path, { ...options, method });
+    } catch (error) {
+      const transient = error instanceof ApiError && (
+        ['NETWORK', 'TIMEOUT'].includes(error.code) ||
+        [502, 503, 504].includes(error.status)
+      );
+      if (attempt >= retries || !transient) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
 }

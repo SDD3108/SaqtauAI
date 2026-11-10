@@ -85,9 +85,17 @@ export const useAuthStore = create((set, get) => ({
   authBusy: false,
   migrationWarning: '',
 
-  setSession: async ({ token, account }) => {
+  setSession: async (response) => {
+    const { token, account } = response || {};
+    if (typeof token !== 'string' || !token.trim() || !account?.id) {
+      throw new ApiError('Invalid session response', 200, null, 'INVALID_RESPONSE');
+    }
     if (get().token && get().account?.id && get().account.id !== account?.id) {
-      await detachNotificationDevice(get().token, get().account.id);
+      try {
+        await detachNotificationDevice(get().token, get().account.id);
+      } catch {
+        // A stale push binding must not prevent a successful sign-in.
+      }
     }
 
     const isGuest = Boolean(account?.settings_data?.guest);
@@ -126,10 +134,7 @@ export const useAuthStore = create((set, get) => ({
   createGuest: async () => {
     const response = await createGuestSession();
 
-    await get().setSession({
-      token: response.token,
-      account: response.account,
-    });
+    await get().setSession(response);
 
     return response.account;
   },
@@ -156,6 +161,9 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const account = await getCurrentAccount();
+      if (!account?.id) {
+        throw new ApiError('Invalid account response', 200, null, 'INVALID_RESPONSE');
+      }
       const isGuest = Boolean(account?.settings_data?.guest);
       const resolvedSessionType = isGuest ? 'guest' : 'account';
 

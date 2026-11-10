@@ -8,7 +8,7 @@ export function createGuestSession() {
 }
 
 export function getCurrentAccount() {
-  return apiRequest('/auth/me/');
+  return apiRequest('/auth/me/', { retries: 1 });
 }
 
 export function updateCurrentAccount(body) {

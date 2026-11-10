@@ -2,14 +2,13 @@
   "expo": {
     "name": "Saqtau AI",
     "slug": "SaqtauAI",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/SaqtauAI Logo.png",
     "scheme": "saqtau",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundler": "metro",
       "appleTeamId": "5QZMMBZ7R7",
       "icon": "./assets/images/SaqtauAI Logo.png",
       "bundleIdentifier": "com.sd3108.Saqtau-AI",
@@ -21,7 +20,6 @@
       }
     },
     "android": {
-      "bundler": "metro",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
