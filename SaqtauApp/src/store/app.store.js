@@ -3,7 +3,8 @@ import { create } from 'zustand';
 import { useAuthStore } from '@/src/features/auth/auth.store';
 import { useCheckInStore } from '@/src/features/check-in/check-in.store';
 import { useOnboardingStore } from '@/src/features/onboarding/onboarding.store';
-import { ApiError } from '@/src/services/api/client';
+import { ApiError, getSessionDiagnostics } from '@/src/services/api/client';
+import { reportStartupFailure } from '@/src/services/diagnostics/startup-reporter';
 
 let bootstrapPromise = null;
 
@@ -56,6 +57,7 @@ export const useAppStore = create((set, get) => ({
         const error = describeFailure(results[failedIndex].reason, tasks[failedIndex][0]);
         console.warn('[STARTUP ERROR]', error.diagnostic);
         set({ isBootstrapped: false, localReady, bootstrapError: error });
+        void reportStartupFailure(error.diagnostic, getSessionDiagnostics());
         return false;
       }
       set({ isBootstrapped: true, localReady: true, bootstrapError: null });

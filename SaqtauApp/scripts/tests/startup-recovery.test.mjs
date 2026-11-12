@@ -41,6 +41,7 @@ const ok = async () => {};
 function appStore(ApiError, auth, onboarding = ok, checkin = ok) {
   return load('src/store/app.store.js', {
     create, ApiError, console: { warn() {} },
+    getSessionDiagnostics: () => [], reportStartupFailure: async () => {},
     useAuthStore: { getState: () => auth },
     useOnboardingStore: { getState: () => ({ hydrate: onboarding }) },
     useCheckInStore: { getState: () => ({ hydrate: checkin }) },

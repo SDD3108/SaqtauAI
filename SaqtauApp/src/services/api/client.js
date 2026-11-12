@@ -34,6 +34,7 @@ function errorSummary(error, secrets) {
   return {
     name: redactText(error.name || typeof error, secrets),
     message: redactText(error.message || String(error), secrets),
+    stack: error.stack ? redactText(error.stack, secrets) : null,
     nativeCodeIfExposed: error.code == null ? null : redactText(error.code, secrets),
     cause: error.cause ? {
       name: redactText(error.cause.name || '', secrets),

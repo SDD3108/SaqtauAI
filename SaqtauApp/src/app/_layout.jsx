@@ -15,6 +15,7 @@ import AppErrorBoundary from '@/src/components/error-boundary/AppErrorBoundary';
 import NetworkGate from '@/src/features/connectivity/components/NetworkGate';
 import { useLocalizationStore } from '@/src/features/localization/localization.store';
 import NotificationRuntime from '@/src/features/notifications/components/NotificationRuntime';
+import StartupReporterRuntime from '@/src/services/diagnostics/StartupReporterRuntime';
 import '@/global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -44,6 +45,7 @@ export default function RootLayout() {
 
   return (
     <AppErrorBoundary>
+      <StartupReporterRuntime />
       <NetworkGate>
         <StatusBar style="dark" />
         <NotificationRuntime />
