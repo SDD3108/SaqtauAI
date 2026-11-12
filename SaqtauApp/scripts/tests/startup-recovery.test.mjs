@@ -24,7 +24,7 @@ function client(fetch) {
     fetch, AbortController, FormData,
     setTimeout: (fn, delay) => setTimeout(fn, delay === 1000 ? 0 : delay),
     clearTimeout, console: { warn: (...args) => logs.push(args) },
-  }, ['apiRequest', 'ApiError', 'setApiToken', 'getApiToken']);
+  }, ['apiRequest', 'ApiError', 'setApiToken', 'getApiToken', 'getSessionDiagnostics']);
   return { ...api, logs };
 }
 function response(status, data = {}, contentType = 'application/json') {
@@ -208,4 +208,91 @@ test('failed push detachment does not block valid account authentication', async
   await store.getState().setSession({ token: 'new', account: { id: 'user', settings_data: { guest: false } } });
   assert.equal(store.getState().token, 'new');
   assert.equal(store.getState().isGuest, false);
+});
+
+test('actual guest API never sends a stored bearer', async () => {
+  const api = client(async (_url, options) => {
+    assert.equal(Object.keys(options.headers).some(k => k.toLowerCase() === 'authorization'), false);
+    return response(200, { token: 'server-issued-token', account: { id: 'guest' } });
+  });
+  api.setApiToken('stale-bearer');
+  const auth = load('src/features/auth/auth.api.js', { apiRequest: api.apiRequest }, ['createGuestSession']);
+  await auth.createGuestSession();
+  assert.equal(api.getApiToken(), 'stale-bearer'); // Do not clear real credentials globally.
+  assert.equal(api.getSessionDiagnostics()[0].authorizationPresent, false);
+  assert.equal(JSON.stringify(api.getSessionDiagnostics()).includes('server-issued-token'), false);
+});
+test('public requests remove explicit authorization in every casing', async () => {
+  const api = client(async (_url, options) => {
+    assert.equal(Object.keys(options.headers).some(k => k.toLowerCase() === 'authorization'), false);
+    return response(204, '');
+  });
+  api.setApiToken('saved');
+  await api.apiRequest('/auth/guest/', { method: 'POST', headers: { authorization: 'Bearer old', Authorization: 'Bearer other' } });
+  await api.apiRequest('/auth/email/login/', { method: 'POST', auth: false, headers: { AUTHORIZATION: 'Bearer old' } });
+});
+test('a network failure retains available original error and correlation metadata', async () => {
+  const api = client(async () => { throw Object.assign(new TypeError('Connection unexpectedly closed'), { code: -1200 }); });
+  await assert.rejects(api.apiRequest('/auth/guest/', { method: 'POST', auth: false }), e => {
+    assert.equal(e.diagnostic.originalError.message, 'Connection unexpectedly closed');
+    assert.equal(e.diagnostic.originalError.nativeCodeIfExposed, '-1200');
+    assert.equal(e.diagnostic.responseReceived, false);
+    assert.equal(e.diagnostic.httpStatus, null);
+    assert.equal(e.diagnostic.url, 'https://api.example.test/api/v1/auth/guest/');
+    assert.equal(e.diagnostic.stage, 'fetch');
+    assert.ok(e.diagnostic.startedAtUtc.endsWith('Z'));
+    assert.ok(e.diagnostic.durationMs >= 0);
+    return true;
+  });
+});
+test('response-body read failure preserves received HTTP status', async () => {
+  const api = client(async () => ({ ...response(502), text: async () => { throw new TypeError('Connection lost while reading'); } }));
+  await assert.rejects(api.apiRequest('/auth/me/'), e => {
+    assert.equal(e.status, 502);
+    assert.equal(e.diagnostic.httpStatus, 502);
+    assert.equal(e.diagnostic.responseReceived, true);
+    assert.equal(e.diagnostic.stage, 'read-body');
+    return true;
+  });
+});
+test('HTTP previews redact token, email, cookies, query strings and account fields', async () => {
+  const api = client(async () => response(401, {
+    detail: 'Rejected Bearer stale-bearer for person@example.com token=abc cookie="hidden" https://server.test/error?token=hidden',
+    token: 'private-token', account: { display_name: 'private-name' }, password: 'private-password',
+  }));
+  api.setApiToken('stale-bearer');
+  await assert.rejects(api.apiRequest('/auth/me/'));
+  const entry = api.getSessionDiagnostics()[0];
+  assert.equal(entry.authorizationPresent, true);
+  assert.equal(entry.httpStatus, 401);
+  assert.equal(entry.errorBodyPreview.otherFieldsOmitted, true);
+  const text = JSON.stringify(api.getSessionDiagnostics());
+  for (const secret of ['stale-bearer','person@example.com','private-token','private-name','private-password','hidden','token=abc']) {
+    assert.equal(text.includes(secret), false, secret);
+  }
+});
+test('diagnostics retain both attempts, distinguish success and bound memory', async () => {
+  let calls = 0;
+  const api = client(async () => ++calls === 1 ? response(503) : response(200, { id: 'private-id' }));
+  await api.apiRequest('/auth/me/', { retries: 1 });
+  const first = api.getSessionDiagnostics();
+  assert.equal(first[0].attempt, 1);
+  assert.equal(first[0].code, 'HTTP');
+  assert.equal(first[1].attempt, 2);
+  assert.equal(first[1].code, 'OK');
+  first[0].code = 'MUTATED';
+  assert.equal(api.getSessionDiagnostics()[0].code, 'HTTP');
+  for (let i = 0; i < 10; i++) await api.apiRequest('/auth/me/');
+  assert.equal(api.getSessionDiagnostics().length, 8);
+  assert.equal(JSON.stringify(api.getSessionDiagnostics()).includes('private-id'), false);
+});
+test('timeouts stay TIMEOUT even when fetch rejects with TypeError after abort', async () => {
+  const api = client((_url, options) => new Promise((_, reject) => {
+    options.signal.addEventListener('abort', () => reject(new TypeError('Network request failed')));
+  }));
+  await assert.rejects(api.apiRequest('/auth/guest/', { method: 'POST', auth: false, timeout: 5 }), e => {
+    assert.equal(e.code, 'TIMEOUT');
+    assert.equal(e.diagnostic.originalError.name, 'TypeError');
+    return true;
+  });
 });

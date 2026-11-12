@@ -1,4 +1,7 @@
 export default {
+  'onboarding.copyDiagnostics': "Скопировать диагностику",
+  'onboarding.diagnosticsCopied': "Скопировано. Вставьте отчёт в сообщение поддержке.",
+  'onboarding.diagnosticsCopyFailed': "Не удалось скопировать. Попробуйте ещё раз.",
   "guard.acceptedByYou": "Вы подтвердили опеку.",
   "guard.declinedByYou": "Вы отклонили заявку.",
   "guard.title": "Опека",

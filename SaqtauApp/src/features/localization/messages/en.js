@@ -1,4 +1,7 @@
 export default {
+  'onboarding.copyDiagnostics': "Copy diagnostic report",
+  'onboarding.diagnosticsCopied': "Copied. Paste the report into your message to support.",
+  'onboarding.diagnosticsCopyFailed': "Could not copy. Please try again.",
   "guard.acceptedByYou": "You approved the guardianship request.",
   "guard.declinedByYou": "You declined the request.",
   "guard.title": "Guardianship",

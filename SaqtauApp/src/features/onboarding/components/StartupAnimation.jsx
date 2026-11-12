@@ -1,10 +1,13 @@
 
 import useI18n from '@/src/features/localization/hooks/useI18n';
+import * as Clipboard from 'expo-clipboard';
+import { getSessionDiagnostics } from '@/src/services/api/client';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Platform,
   Pressable,
   Text,
   View,
@@ -31,6 +34,31 @@ export default function StartupAnimation({
   onSignIn,
 }) {
   const { t } = useI18n();
+  const [copyStatus, setCopyStatus] = useState('');
+  const [copying, setCopying] = useState(false);
+
+  useEffect(() => { setCopyStatus(''); }, [error]);
+
+  const copyDiagnostics = async () => {
+    if (copying) return;
+    setCopying(true);
+    try {
+      const report = JSON.stringify({
+        report: 'SaqtauAI session diagnostics v1',
+        exportedAtUtc: new Date().toISOString(),
+        platform: Platform.OS,
+        osVersion: Platform.Version,
+        supportCode: error?.diagnostic || null,
+        requests: getSessionDiagnostics(),
+      }, null, 2);
+      const copied = await Clipboard.setStringAsync(report);
+      setCopyStatus(copied === false ? 'diagnosticsCopyFailed' : 'diagnosticsCopied');
+    } catch {
+      setCopyStatus('diagnosticsCopyFailed');
+    } finally {
+      setCopying(false);
+    }
+  };
 
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.88)).current;
@@ -248,6 +276,21 @@ export default function StartupAnimation({
               {t('auth.signIn')}
             </Text>
           </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          disabled={copying}
+          onPress={copyDiagnostics}
+          className="mt-2 min-h-[48px] items-center justify-center px-5 py-3 active:opacity-70"
+        >
+          <Text className="font-inter-medium text-center text-[14px] text-[#807B89]">
+            {t('onboarding.copyDiagnostics')}
+          </Text>
+        </Pressable>
+        {copyStatus ? (
+          <Text accessibilityLiveRegion="polite" className="text-center font-inter text-[12px] leading-4 text-[#807B89]">
+            {t(`onboarding.${copyStatus}`)}
+          </Text>
         ) : null}
       </View>
     );

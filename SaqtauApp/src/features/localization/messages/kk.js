@@ -1,4 +1,7 @@
 export default {
+  'onboarding.copyDiagnostics': "Диагностиканы көшіру",
+  'onboarding.diagnosticsCopied': "Көшірілді. Есепті қолдау қызметіне хабарламаға қойыңыз.",
+  'onboarding.diagnosticsCopyFailed': "Көшіру мүмкін болмады. Қайталап көріңіз.",
   "guard.acceptedByYou": "Қамқоршылықты растадыңыз.",
   "guard.declinedByYou": "Өтінішті қабылдамадыңыз.",
   "guard.title": "Қамқоршылық",
