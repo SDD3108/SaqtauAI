@@ -1,7 +1,17 @@
-import { API_TIMEOUT, API_URL } from '@/src/constants/config';
+import { API_TIMEOUT, API_URL, FETCH_CONFIGURATION, NETWORK_REVISION } from '@/src/constants/config';
 
 let accessToken = null;
 const sessionDiagnostics = [];
+let requestSequence = 0;
+
+// Diagnostic correlation only; never an authentication/idempotency credential.
+function newRequestId() {
+  requestSequence += 1;
+  return `saqtau-${Date.now().toString(36)}-${requestSequence.toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+function safeRequestId(value) {
+  return typeof value === 'string' && /^[a-zA-Z0-9-]{8,80}$/.test(value) ? value : null;
+}
 
 // Only startup session requests are retained, in memory, until app termination.
 export function getSessionDiagnostics() {
@@ -108,24 +118,37 @@ function getErrorMessage(data, status) {
 
 async function requestOnce(
   path,
-  { method = 'GET', body, headers = {}, auth = true, timeout = API_TIMEOUT, attempt = 1 } = {},
+  { method = 'GET', body, headers = {}, auth = true, timeout = API_TIMEOUT, attempt = 1, diagnosticProbe = false } = {},
 ) {
   const startedAt = Date.now();
   const trackSession = (method === 'POST' && path === '/auth/guest/') ||
-    (method === 'GET' && path === '/auth/me/');
+    (method === 'GET' && path === '/auth/me/') ||
+    (diagnosticProbe && method === 'GET' && ['/health/', '/ready/'].includes(path));
+  const requestId = trackSession ? newRequestId() : null;
   let response = null;
   let responseText = null;
   let stage = 'prepare';
   let timedOut = false;
   const safePath = path.replace(/(\/family\/invite-links\/)[^/]+/, '$1[redacted]');
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => { timedOut = true; controller.abort(); }, timeout);
+  // Abort alone is insufficient if a native fetch/body promise never settles.
+  // The same deadline covers both headers and body; late completions are ignored.
+  let timeoutId;
+  const deadline = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      timedOut = true;
+      reject(new ApiError('Request timed out', response?.status || 0, null, 'TIMEOUT'));
+      controller.abort();
+    }, timeout);
+  });
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 
   const requestHeaders = {
     Accept: 'application/json',
     ...headers,
   };
+
+  if (requestId) requestHeaders['X-Client-Request-ID'] = requestId;
 
   if (!isFormData && body !== undefined) {
     requestHeaders['Content-Type'] = 'application/json';
@@ -148,6 +171,10 @@ async function requestOnce(
     if (!trackSession) return;
     const diagnostic = {
       schema: 1,
+      requestId,
+      serverRequestId: safeRequestId(response?.headers.get('x-request-id')),
+      networkRevision: NETWORK_REVISION,
+      fetchConfiguration: FETCH_CONFIGURATION,
       startedAtUtc: new Date(startedAt).toISOString(),
       endedAtUtc: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -160,6 +187,7 @@ async function requestOnce(
       redirected: response?.redirected ?? null,
       contentType: response?.headers.get('content-type') || null,
       code: failure?.code || 'OK',
+      timeoutSource: timedOut ? 'client-deadline' : null,
       originalError: errorSummary(originalError, secrets),
       errorBodyPreview: response && !response.ok
         ? errorBodyPreview(responseText, secrets) : null,
@@ -176,16 +204,16 @@ async function requestOnce(
     const requestBody = body === undefined || isFormData || typeof body === 'string'
       ? body : JSON.stringify(body);
     stage = 'fetch';
-    response = await fetch(`${API_URL}${path}`, {
+    response = await Promise.race([deadline, fetch(`${API_URL}${path}`, {
       method,
       headers: requestHeaders,
       body: requestBody,
       signal: controller.signal,
-    });
+    })]);
 
     const contentType = response.headers.get('content-type') || '';
     stage = 'read-body';
-    const text = await response.text();
+    const text = await Promise.race([deadline, response.text()]);
     responseText = text;
     stage = 'parse-response';
     let data = text || null;
@@ -249,4 +277,19 @@ export async function apiRequest(path, options = {}) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
+}
+
+
+let connectivityProbe = null;
+// Read-only probes run AFTER a failure, never as a prerequisite to sign-in.
+export function probeStartupConnectivity() {
+  if (connectivityProbe) return connectivityProbe;
+  connectivityProbe = Promise.all(['/health/', '/ready/'].map(async path => {
+    try {
+      await apiRequest(path, { auth: false, timeout: 5000, diagnosticProbe: true });
+    } catch {
+      // 404 on an older backend is useful evidence, not a new startup failure.
+    }
+  })).finally(() => { connectivityProbe = null; });
+  return connectivityProbe;
 }

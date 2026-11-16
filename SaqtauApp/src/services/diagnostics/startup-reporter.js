@@ -1,3 +1,4 @@
+import { getSessionDiagnostics, probeStartupConnectivity } from '@/src/services/api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
@@ -50,7 +51,7 @@ async function networkSnapshot() {
 export async function reportStartupFailure(supportCode, requests) {
   if (!enabled() || !String(supportCode).startsWith('SESSION-')) return;
   try {
-    const snapshot = requests.slice(-8);
+    const snapshot = requests.filter(r => /\/auth\/(guest|me)\/$/.test(r.url)).slice(-8);
     const last = snapshot[snapshot.length - 1];
     const fingerprint = `${supportCode}|${last?.url}|${last?.method}`;
     if (lastFingerprint === fingerprint && Date.now() - lastQueuedAt < 60000) return;
@@ -70,7 +71,13 @@ export async function reportStartupFailure(supportCode, requests) {
       },
       network: await networkSnapshot(),
       requests: snapshot,
+      connectivity: [],
     };
+    // Separate probe records from the original failure so the Telegram caption
+    // still describes the failed guest request. Probes have no Authorization.
+    await probeStartupConnectivity();
+    report.connectivity = getSessionDiagnostics().filter(r =>
+      /\/(health|ready)\/$/.test(r.url) && r.startedAtUtc >= report.createdAtUtc).slice(-2);
     await exclusively(async () => {
       const queue = await readQueue();
       queue.push({ report, savedAt: Date.now(), attempts: 0, nextAttempt: 0 });
@@ -93,16 +100,22 @@ export function flushStartupReports() {
     }
     const item = queue[index];
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
+    let timer;
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error('Diagnostic delivery timed out'));
+        controller.abort();
+      }, 12000);
+    });
     let delivered = false;
     let discard = false;
     let retryAfter = 0;
     try {
       // Deliberately bypass apiRequest: no bearer token, no recursive reporting.
-      const response = await fetch(ENDPOINT, {
+      const response = await Promise.race([deadline, fetch(ENDPOINT, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.report), signal: controller.signal,
-      });
+      })]);
       delivered = response.ok;
       discard = [400, 404, 413, 415, 422].includes(response.status);
       retryAfter = Number(response.headers.get('retry-after')) * 1000 || 0;

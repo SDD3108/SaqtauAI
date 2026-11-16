@@ -7,11 +7,17 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "environment": "preview"
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+      }
     },
     "production": {
       "autoIncrement": true,
@@ -23,6 +29,9 @@
       },
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
       }
     }
   },

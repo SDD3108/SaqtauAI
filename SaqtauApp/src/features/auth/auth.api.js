@@ -4,6 +4,7 @@ export function createGuestSession() {
   return apiRequest('/auth/guest/', {
     method: 'POST',
     auth: false,
+    body: {}, // Explicit JSON framing for native clients and reverse proxies.
   });
 }
 
