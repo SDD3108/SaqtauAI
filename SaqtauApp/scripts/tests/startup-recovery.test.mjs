@@ -21,15 +21,16 @@ function client(fetch) {
   const logs = [];
   const api = load('src/services/api/client.js', {
     API_URL: 'https://api.example.test/api/v1', API_TIMEOUT: 20000,
+    NETWORK_REVISION: 'test-revision', FETCH_CONFIGURATION: 'react-native-requested',
     fetch, AbortController, FormData,
     setTimeout: (fn, delay) => setTimeout(fn, delay === 1000 ? 0 : delay),
     clearTimeout, console: { warn: (...args) => logs.push(args) },
-  }, ['apiRequest', 'ApiError', 'setApiToken', 'getApiToken', 'getSessionDiagnostics']);
+  }, ['apiRequest', 'ApiError', 'setApiToken', 'getApiToken', 'getSessionDiagnostics', 'probeStartupConnectivity']);
   return { ...api, logs };
 }
 function response(status, data = {}, contentType = 'application/json') {
   return { ok: status >= 200 && status < 300, status,
-    headers: { get: () => contentType },
+    headers: { get: name => name.toLowerCase() === 'content-type' ? contentType : null },
     text: async () => typeof data === 'string' ? data : JSON.stringify(data) };
 }
 function deferred() {
@@ -293,7 +294,69 @@ test('timeouts stay TIMEOUT even when fetch rejects with TypeError after abort',
   }));
   await assert.rejects(api.apiRequest('/auth/guest/', { method: 'POST', auth: false, timeout: 5 }), e => {
     assert.equal(e.code, 'TIMEOUT');
-    assert.equal(e.diagnostic.originalError.name, 'TypeError');
+    assert.equal(e.diagnostic.originalError.name, 'ApiError');
     return true;
   });
+});
+
+test('deadline rejects a native fetch that ignores abort; late success stays discarded', { timeout: 1000 }, async () => {
+  const pending = deferred();
+  let calls = 0;
+  const api = client(() => { calls++; return pending.promise; });
+  await assert.rejects(api.apiRequest('/auth/guest/', { method: 'POST', timeout: 5 }), e =>
+    e.code === 'TIMEOUT' && e.diagnostic.stage === 'fetch');
+  pending.resolve(response(201, { token: 'late-secret', account: { id: 'late' } }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls, 1);
+  assert.equal(api.getSessionDiagnostics().length, 1);
+  assert.equal(api.getSessionDiagnostics()[0].code, 'TIMEOUT');
+  assert.equal(api.getApiToken(), null);
+});
+test('deadline also rejects an indefinitely pending native response.text()', { timeout: 1000 }, async () => {
+  const api = client(async () => ({ ...response(200), text: () => new Promise(() => {}) }));
+  await assert.rejects(api.apiRequest('/auth/me/', { timeout: 5 }), e =>
+    e.code === 'TIMEOUT' && e.status === 200 && e.diagnostic.stage === 'read-body' &&
+    e.diagnostic.responseReceived && e.diagnostic.timeoutSource === 'client-deadline');
+});
+test('correlation ID is sent without credentials and a different ID is used on retry', async () => {
+  const ids = [];
+  const serverId = 'abcde12345abcde12345abcde12345abcd';
+  const api = client(async (_, opt) => {
+    ids.push(opt.headers['X-Client-Request-ID']);
+    const res = response(ids.length === 1 ? 503 : 200, { id: 'ok' });
+    res.headers.get = name => name === 'x-request-id' ? serverId : 'application/json';
+    return res;
+  });
+  await api.apiRequest('/auth/me/', { retries: 1 });
+  assert.match(ids[0], /^saqtau-[a-z0-9-]+$/);
+  assert.notEqual(ids[0], ids[1]);
+  assert.equal(api.getSessionDiagnostics()[0].requestId, ids[0]);
+  assert.equal(api.getSessionDiagnostics()[1].serverRequestId, serverId);
+});
+test('guest API sends explicit empty JSON exactly once', async () => {
+  let calls = 0;
+  const api = client(async (_, opt) => {
+    calls++;
+    assert.equal(opt.body, '{}');
+    assert.equal(opt.headers['Content-Type'], 'application/json');
+    return response(201, { token: 'guest', account: { id: 'guest' } });
+  });
+  const auth = load('src/features/auth/auth.api.js', { apiRequest: api.apiRequest }, ['createGuestSession']);
+  await auth.createGuestSession();
+  assert.equal(calls, 1);
+});
+test('connectivity probes are shared read-only requests without bearer or POST replay', async () => {
+  const seen = [];
+  const api = client(async (url, opt) => {
+    seen.push(url);
+    assert.equal(opt.method, 'GET');
+    assert.equal(opt.headers.Authorization, undefined);
+    return response(url.endsWith('/ready/') ? 503 : 200);
+  });
+  api.setApiToken('private');
+  const first = api.probeStartupConnectivity();
+  assert.equal(api.probeStartupConnectivity(), first);
+  await first;
+  assert.equal(seen.length, 2);
+  assert.equal(api.getSessionDiagnostics().length, 2);
 });
