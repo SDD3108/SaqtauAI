@@ -4,6 +4,8 @@ export function createGuestSession() {
   return apiRequest('/auth/guest/', {
     method: 'POST',
     auth: false,
+    body: {},
+    timeout: 60000,
   });
 }
 
