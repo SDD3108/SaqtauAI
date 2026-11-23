@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/SaqtauAI Logo.png",
@@ -31,9 +31,7 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.sd3108.SaqtauAI",
       "intentFilters": [
@@ -52,6 +50,11 @@
             "DEFAULT"
           ]
         }
+      ],
+      "blockedPermissions": [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.ACTIVITY_RECOGNITION"
       ]
     },
     "web": {
@@ -122,7 +125,8 @@
       "expo-sharing",
       "expo-asset",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-saqtau-android-permissions"
     ],
     "experiments": {
       "typedRoutes": true,
